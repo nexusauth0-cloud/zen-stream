@@ -1,8 +1,15 @@
+@import "./tokens.css";
+@import "./base.css";
+
 @layer reset, tokens, base, components;
 
-/* Design tokens and base styles are layered below in declaration order:
-   - reset  : minimal normalization lives in base.css
-   - tokens : custom properties (tokens.css)
-   - base   : element defaults (base.css)
-   - components : primitives (Button, Icon, ...)
-*/
+/* Global stylesheet entry.
+   Imported by main.tsx. Loads, in order:
+   - tokens : design tokens (custom properties, tokens.css)
+   - base   : reset + element defaults (base.css)
+   - components : primitives and shell components, imported by
+     their own React components (Button, Icon, AppShell, ...)
+
+   The layer order statement guarantees component rules always
+   win over base element defaults, regardless of bundle order.
+ */
