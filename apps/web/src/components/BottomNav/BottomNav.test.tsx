@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { AppRoutes } from "../../App";
+import { WatchlistProvider } from "../../store/watchlist";
 
 function renderAt(path: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
-      <AppRoutes />
+      <WatchlistProvider>
+        <AppRoutes />
+      </WatchlistProvider>
     </MemoryRouter>,
   );
 }
@@ -20,15 +23,15 @@ describe("BottomNav (mobile)", () => {
       .getAllByRole("link")
       .map((link) => link.getAttribute("aria-label") ?? link.textContent?.trim());
 
-    expect(labels).toEqual(["Home", "Movies", "Search", "My List", "Account"]);
+    expect(labels).toEqual(["Home", "Movies", "Series", "Search", "My List"]);
   });
 
   it("marks the active destination with aria-current", () => {
-    renderAt("/account");
+    renderAt("/my-list");
 
     const nav = screen.getByRole("navigation", { name: "Mobile navigation" });
-    const account = within(nav).getByRole("link", { name: /Account/i });
-    expect(account).toHaveAttribute("aria-current", "page");
+    const myList = within(nav).getByRole("link", { name: /My List/i });
+    expect(myList).toHaveAttribute("aria-current", "page");
   });
 
   it("does not mark inactive destinations", () => {

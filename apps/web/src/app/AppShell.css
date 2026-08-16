@@ -1,21 +1,6 @@
 @layer components {
   .zs-shell {
     min-height: 100vh;
-  }
-
-  .zs-shell__body {
-    display: flex;
-    align-items: stretch;
-  }
-
-  /* Mobile-first: the sidebar is replaced by header + bottom nav below 768px. */
-  .zs-sidebar {
-    display: none;
-  }
-
-  .zs-shell__frame {
-    flex: 1;
-    min-width: 0;
     display: flex;
     flex-direction: column;
   }
@@ -24,11 +9,11 @@
     flex: 1;
     min-width: 0;
     padding: var(--zs-space-5) var(--zs-space-4)
-      calc(var(--zs-space-6) + 60px + env(safe-area-inset-bottom, 0px));
+      calc(var(--zs-space-6) + 76px + env(safe-area-inset-bottom, 0px));
   }
 
   .zs-main__inner {
-    max-width: 1200px;
+    max-width: var(--zs-container-max);
     margin-inline: auto;
   }
 
@@ -49,21 +34,7 @@
     top: var(--zs-space-3);
   }
 
-  /* Mobile-first: sidebar and mobile header swap at >= 768px. */
-
   @media (min-width: 768px) {
-    .zs-mobile-header {
-      display: none;
-    }
-
-    .zs-sidebar {
-      display: block;
-    }
-
-    .zs-bottom-nav {
-      display: none;
-    }
-
     .zs-main {
       padding: var(--zs-space-6) var(--zs-space-6) var(--zs-space-8);
     }

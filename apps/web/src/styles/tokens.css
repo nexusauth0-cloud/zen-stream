@@ -26,8 +26,8 @@
     --zs-color-error: #e5655f;
     --zs-color-focus: #e8b34b;
 
-    /* Typography */
-    --zs-font-display: "Fraunces", "Georgia", serif;
+    /* Typography — clean sans-serif streaming UI (no editorial serifs) */
+    --zs-font-display: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
     --zs-font-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
     --zs-text-xs: 0.75rem;
     --zs-text-sm: 0.875rem;
@@ -36,15 +36,16 @@
     --zs-text-xl: 1.25rem;
     --zs-text-2xl: 1.5rem;
     --zs-text-3xl: 1.875rem;
-    --zs-text-display: clamp(2.5rem, 6vw, 4.5rem);
+    --zs-text-display: clamp(1.75rem, 4vw, 3.25rem);
+    --zs-text-hero: clamp(1.5rem, 3.5vw, 2.75rem);
     --zs-weight-regular: 400;
     --zs-weight-medium: 500;
     --zs-weight-semibold: 600;
     --zs-weight-bold: 700;
-    --zs-leading-tight: 1.1;
+    --zs-leading-tight: 1.15;
     --zs-leading-normal: 1.5;
-    --zs-tracking-tight: -0.02em;
-    --zs-tracking-wide: 0.08em;
+    --zs-tracking-tight: -0.015em;
+    --zs-tracking-wide: 0.06em;
 
     /* Spacing — 4px base scale */
     --zs-space-1: 0.25rem;
@@ -76,7 +77,7 @@
 
     /* Layout */
     --zs-target-min: 44px;
-    --zs-container-max: 1320px;
+    --zs-container-max: 1440px;
     --zs-container-narrow: 920px;
     --zs-breakpoint-sm: 480px;
     --zs-breakpoint-md: 768px;

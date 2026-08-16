@@ -67,7 +67,7 @@
   h5,
   h6 {
     font-family: var(--zs-font-display);
-    font-weight: var(--zs-weight-semibold);
+    font-weight: var(--zs-weight-bold);
     line-height: var(--zs-leading-tight);
     letter-spacing: var(--zs-tracking-tight);
     text-wrap: balance;
