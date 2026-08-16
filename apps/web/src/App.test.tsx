@@ -33,7 +33,7 @@ describe("routing", () => {
   it("renders the cinematic landing page at /", () => {
     renderAt("/");
 
-    expect(screen.getByRole("heading", { level: 1, name: /story is already waiting/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: /the long afterlight/i })).toBeInTheDocument();
     expect(screen.queryByTestId("placeholder-page")).not.toBeInTheDocument();
   });
 

@@ -1,0 +1,9 @@
+@layer components {
+  .zs-feed {
+    min-width: 0;
+  }
+
+  .zs-feed__sentinel {
+    height: 1px;
+  }
+}

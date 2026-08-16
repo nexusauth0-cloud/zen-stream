@@ -1,32 +1,24 @@
-import { Hero } from "./Hero";
-import { Featured } from "./Featured";
-import { ContinueWatching } from "./ContinueWatching";
-import { Categories } from "./Categories";
-import { Discovery } from "./Discovery";
+import { FeedSections } from "./FeedSections";
+import { HomeHero } from "./HomeHero";
 import { ProductPreview } from "./ProductPreview";
-import { FinalCta } from "./FinalCta";
 import { LandingFooter } from "./LandingFooter";
-import { LANDING_COPY, MOVIE_TITLES, SERIES_TITLES } from "./fixtures";
+import { HOME_FEED } from "./fixtures";
 import "./LandingPage.css";
 
 /**
- * Zen-Stream cinematic landing experience.
+ * Zen-Stream streaming homepage: cinematic hero, then the composed feed
+ * (trending, popular, continue-watching, genres, new releases), the product
+ * preview as a secondary surface near the bottom, and a compact footer.
  *
- * A deliberate journey: hero → featured → continue-watching concept →
- * categories → movie/series discovery → product preview → final CTA →
- * footer. Presentation-only fixtures; no catalog, no playback, no auth.
+ * Everything is driven by HOME_FEED fixtures — a future backend replaces
+ * the fixtures, not the UI.
  */
 export function LandingPage() {
   return (
     <div className="zs-landing">
-      <Hero />
-      <Featured />
-      <ContinueWatching />
-      <Categories />
-      <Discovery id="zs-movies-title" heading={LANDING_COPY.moviesTitle} items={MOVIE_TITLES} to="/movies" />
-      <Discovery id="zs-series-title" heading={LANDING_COPY.seriesTitle} items={SERIES_TITLES} to="/series" />
+      <HomeHero item={HOME_FEED.hero} />
+      <FeedSections sections={HOME_FEED.sections} />
       <ProductPreview />
-      <FinalCta />
       <LandingFooter />
     </div>
   );

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { AppRoutes } from "../../App";
-import { CATEGORIES, CONTINUE_WATCHING_TITLES, FEATURED_TITLE, LANDING_COPY, MOVIE_TITLES, SERIES_TITLES } from "./fixtures";
+import { HOME_COPY, HOME_FEED, HOME_FEED_SECTIONS } from "./fixtures";
 
 function renderLanding() {
   return render(
@@ -12,10 +12,10 @@ function renderLanding() {
   );
 }
 
-describe("landing page", () => {
+describe("streaming homepage", () => {
   it("is served at the home route only", () => {
     const { unmount } = renderLanding();
-    expect(screen.getByRole("heading", { level: 1, name: /story is already waiting/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: HOME_FEED.hero.title })).toBeInTheDocument();
     unmount();
 
     render(
@@ -23,53 +23,69 @@ describe("landing page", () => {
         <AppRoutes />
       </MemoryRouter>,
     );
-    expect(screen.queryByRole("heading", { level: 1, name: /story is already waiting/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 1, name: HOME_FEED.hero.title })).not.toBeInTheDocument();
   });
 
   it("exposes exactly one h1", () => {
     renderLanding();
 
-    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    const headings = screen.getAllByRole("heading");
+    expect(headings.filter((h) => h.tagName === "H1")).toHaveLength(1);
+    expect(headings.every((h) => ["H1", "H2"].includes(h.tagName))).toBe(true);
   });
 
-  it("renders the hero with primary and secondary CTAs", () => {
+  it("renders the cinematic hero with the featured title", () => {
     renderLanding();
 
-    expect(screen.getByText(LANDING_COPY.heroSupport)).toBeInTheDocument();
+    const hero = screen.getByRole("heading", { level: 1, name: HOME_FEED.hero.title }).closest("section")!;
+    expect(within(hero).getByText(HOME_FEED.hero.synopsis!)).toBeInTheDocument();
+    expect(within(hero).getByText(/2025 · Science Fiction · 2h 8m/i)).toBeInTheDocument();
 
-    const hero = screen.getByRole("heading", { level: 1 }).closest("section")!;
-    const primary = within(hero).getByRole("link", { name: LANDING_COPY.primaryCta });
-    expect(primary).toHaveAttribute("href", "/movies");
+    const watch = within(hero).getByRole("link", { name: HOME_COPY.watch });
+    expect(watch).toHaveAttribute("href", "/movies");
 
-    const secondary = within(hero).getByRole("link", { name: LANDING_COPY.secondaryCta });
-    expect(secondary).toHaveAttribute("href", "/series");
+    const moreInfo = within(hero).getByRole("link", { name: HOME_COPY.moreInfo });
+    expect(moreInfo).toHaveAttribute("href", "/movies");
   });
 
-  it("renders the featured section with metadata and a CTA", () => {
+  it("renders every feed section as a heading-2 rail", () => {
     renderLanding();
 
-    const title = screen.getByRole("heading", { level: 2, name: FEATURED_TITLE.title });
-    expect(title).toBeInTheDocument();
-
-    const featuredSection = title.closest("section")!;
-    expect(within(featuredSection).getByText(LANDING_COPY.featuredEyebrow)).toBeInTheDocument();
-
-    const meta = within(featuredSection).getByText(
-      `${FEATURED_TITLE.genre} · ${FEATURED_TITLE.year} · ${FEATURED_TITLE.runtimeMinutes} min`,
-    );
-    expect(meta).toBeInTheDocument();
-    expect(within(featuredSection).getByText(FEATURED_TITLE.synopsis!)).toBeInTheDocument();
-    expect(within(featuredSection).getByRole("link", { name: /^explore$/i })).toHaveAttribute("href", "/movies");
+    for (const section of HOME_FEED_SECTIONS) {
+      expect(screen.getByRole("heading", { level: 2, name: section.title })).toBeInTheDocument();
+    }
   });
 
-  it("renders the continue-watching concept with demo progress", () => {
+  it("sends rail cards and see-all links to the right routes", () => {
     renderLanding();
 
-    expect(screen.getByRole("heading", { level: 2, name: LANDING_COPY.continueEyebrow })).toBeInTheDocument();
-    expect(screen.getByText(LANDING_COPY.continueNote)).toBeInTheDocument();
+    const popularMovies = screen.getByRole("heading", { level: 2, name: "Popular Movies" }).closest("section")!;
+    expect(within(popularMovies).getByRole("link", { name: /see all/i })).toHaveAttribute("href", "/movies");
+    expect(within(popularMovies).getAllByTestId("poster-card")[0]).toHaveAttribute("href", "/movies");
 
-    const progressBars = screen.getAllByRole("progressbar");
-    expect(progressBars).toHaveLength(CONTINUE_WATCHING_TITLES.length);
+    const popularSeries = screen.getByRole("heading", { level: 2, name: "Popular Series" }).closest("section")!;
+    expect(within(popularSeries).getByRole("link", { name: /see all/i })).toHaveAttribute("href", "/series");
+    expect(within(popularSeries).getAllByTestId("poster-card")[0]).toHaveAttribute("href", "/series");
+
+    const comedy = screen.getByRole("heading", { level: 2, name: "Comedy" }).closest("section")!;
+    expect(within(comedy).getAllByTestId("poster-card")[0]).toHaveAttribute("href", "/movies");
+  });
+
+  it("hides the see-all action on the continue-watching rail", () => {
+    renderLanding();
+
+    const continueRail = screen.getByRole("heading", { level: 2, name: "Continue watching" }).closest("section")!;
+    expect(within(continueRail).queryByRole("link", { name: /see all/i })).not.toBeInTheDocument();
+  });
+
+  it("renders continue-watching as a demo with progress bars", () => {
+    renderLanding();
+
+    const continueRail = screen.getByRole("heading", { level: 2, name: "Continue watching" }).closest("section")!;
+    expect(within(continueRail).getByText(/demo preview/i)).toBeInTheDocument();
+
+    const progressBars = within(continueRail).getAllByRole("progressbar");
+    expect(progressBars.length).toBeGreaterThan(0);
     for (const bar of progressBars) {
       expect(bar).toHaveAttribute("aria-valuemin", "0");
       expect(bar).toHaveAttribute("aria-valuemax", "100");
@@ -77,67 +93,32 @@ describe("landing page", () => {
     }
   });
 
-  it("renders all browse categories as navigation surfaces", () => {
+  it("places the product preview below the feed sections", () => {
     renderLanding();
 
-    expect(screen.getByRole("heading", { level: 2, name: LANDING_COPY.categoriesTitle })).toBeInTheDocument();
-    for (const category of CATEGORIES) {
-      const link = screen.getByRole("link", { name: category.label });
-      expect(link).toHaveAttribute("href", "/movies");
-    }
+    const preview = screen.getByTestId("product-preview-desktop");
+    const lastRail = screen.getByRole("heading", { level: 2, name: "Weekend Discoveries" });
+
+    expect(preview.compareDocumentPosition(lastRail) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
   });
 
-  it("renders the movies and series discovery sections with see-all links", () => {
+  it("renders the compact footer with brand, navigation, and legal placeholder", () => {
     renderLanding();
 
-    const movies = screen.getByRole("heading", { level: 2, name: LANDING_COPY.moviesTitle });
-    expect(movies).toBeInTheDocument();
-    const moviesSection = movies.closest("section")!;
-    expect(within(moviesSection).getByRole("link", { name: /see all/i })).toHaveAttribute("href", "/movies");
-    expect(within(moviesSection).getAllByTestId("poster-card").length).toBe(MOVIE_TITLES.length);
-
-    const series = screen.getByRole("heading", { level: 2, name: LANDING_COPY.seriesTitle });
-    expect(series).toBeInTheDocument();
-    const seriesSection = series.closest("section")!;
-    expect(within(seriesSection).getByRole("link", { name: /see all/i })).toHaveAttribute("href", "/series");
-    expect(within(seriesSection).getAllByTestId("poster-card").length).toBe(SERIES_TITLES.length);
-
-    const posterCards = screen.getAllByTestId("poster-card");
-    // Discovery rails (18) + ProductPreview fixtures (4 desktop + 3 mobile).
-    expect(posterCards.length).toBe(MOVIE_TITLES.length + SERIES_TITLES.length + CONTINUE_WATCHING_TITLES.length + 7);
-  });
-
-  it("renders the product preview frames", () => {
-    renderLanding();
-
-    expect(screen.getByTestId("product-preview-desktop")).toBeInTheDocument();
-    expect(screen.getByTestId("product-preview-mobile")).toBeInTheDocument();
-  });
-
-  it("renders the final CTA with both destinations", () => {
-    renderLanding();
-
-    const finalTitle = screen.getByRole("heading", { level: 2, name: LANDING_COPY.finalTitle });
-    expect(finalTitle).toBeInTheDocument();
-
-    const finalSection = finalTitle.closest("section")!;
-    const links = within(finalSection).getAllByRole("link");
-    expect(links.map((l) => [l.textContent?.trim(), l.getAttribute("href")])).toEqual([
-      [LANDING_COPY.primaryCta, "/movies"],
-      [LANDING_COPY.secondaryCta, "/series"],
-    ]);
-  });
-
-  it("renders the footer with brand and navigation", () => {
-    renderLanding();
-
-    expect(screen.getByText(LANDING_COPY.footerStatement)).toBeInTheDocument();
-    expect(screen.getByText(LANDING_COPY.footerLegal)).toBeInTheDocument();
+    expect(screen.getByText(HOME_COPY.footerStatement)).toBeInTheDocument();
+    expect(screen.getByText(HOME_COPY.footerLegal)).toBeInTheDocument();
 
     const footerNav = screen.getByRole("navigation", { name: "Footer" });
     const targets = within(footerNav)
       .getAllByRole("link")
       .map((link) => link.getAttribute("href"));
-    expect(targets).toEqual(["/movies", "/series", "/search", "/account"]);
+    expect(targets).toEqual(["/movies", "/series", "/search", "/my-list", "/account"]);
+  });
+
+  it("keeps the product preview as a secondary surface", () => {
+    renderLanding();
+
+    expect(screen.getByRole("heading", { level: 2, name: HOME_COPY.previewTitle })).toBeInTheDocument();
+    expect(screen.queryByText(/story is already waiting/i)).not.toBeInTheDocument();
   });
 });

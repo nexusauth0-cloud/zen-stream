@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import type { FixtureTitle } from "./fixtures";
+import type { FeedTitle } from "./fixtures";
 import { CinematicArt } from "./CinematicArt";
 import "./PosterCard.css";
 
 export interface PosterCardProps {
-  title: FixtureTitle;
+  title: FeedTitle;
   /** Destination; omit to render a non-interactive presentation card. */
   to?: string;
   className?: string;
@@ -27,7 +27,7 @@ export function PosterCard({ title, to, className }: PosterCardProps) {
     <>
       <div className="zs-poster__media">
         <div className="zs-poster__art" aria-hidden="true">
-          <CinematicArt seed={title.id} variant="poster" />
+          <CinematicArt seed={title.id} mood={title.artMood} variant="poster" />
         </div>
         {progressValue !== undefined && (
           <div

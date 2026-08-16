@@ -39,6 +39,13 @@ describe("AppShell", () => {
     expect(screen.getByRole("navigation", { name: "Mobile navigation" })).toBeInTheDocument();
   });
 
+  it("exposes a desktop global search field", () => {
+    renderShell();
+
+    expect(screen.getByRole("search")).toBeInTheDocument();
+    expect(screen.getByRole("searchbox", { name: "Search movies and series" })).toBeInTheDocument();
+  });
+
   it("renders the brand as links home (sidebar and mobile header)", () => {
     renderShell();
 

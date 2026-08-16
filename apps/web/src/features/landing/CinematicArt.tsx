@@ -1,11 +1,24 @@
 import { useId } from "react";
+import type { ArtMood } from "./fixtures";
 import "./CinematicArt.css";
 
 export type CinematicArtVariant = "poster" | "backdrop" | "hero";
 
+/** RGB triplets for each mood, consumed by CSS gradients and SVG fills. */
+export const ART_MOOD_RGB: Record<ArtMood, string> = {
+  amber: "242 194 102",
+  steel: "156 174 194",
+  crimson: "214 82 70",
+  emerald: "74 176 128",
+  violet: "154 116 222",
+  ivory: "228 224 210",
+};
+
 export interface CinematicArtProps {
   /** Deterministic seed — the same seed always produces the same artwork. */
   seed: string;
+  /** Color grading mood; palettes keyed by genre in the fixtures. */
+  mood?: ArtMood;
   variant?: CinematicArtVariant;
   className?: string;
 }
@@ -77,15 +90,16 @@ function ridgePath(points: [number, number][], width: number, height: number): s
 }
 
 /**
- * Original procedural "poster" artwork: dark gradients, soft amber lighting,
- * layered ridge silhouettes, subtle vignette. Deterministic per seed —
- * no external images, no copied posters, no hotlinked artwork.
+ * Original procedural "poster" artwork: dark gradients, mood-colored
+ * lighting, layered ridge silhouettes, subtle vignette. Deterministic per
+ * seed — no external images, no copied posters, no hotlinked artwork.
  *
  * Purely decorative: always rendered with aria-hidden by consumers.
  */
-export function CinematicArt({ seed, variant = "poster", className }: CinematicArtProps) {
+export function CinematicArt({ seed, mood = "amber", variant = "poster", className }: CinematicArtProps) {
   const p = artParams(seed);
   const gradientId = useId();
+  const rgb = ART_MOOD_RGB[mood];
 
   const classes = ["zs-art", `zs-art--${variant}`, className].filter(Boolean).join(" ");
 
@@ -97,18 +111,19 @@ export function CinematicArt({ seed, variant = "poster", className }: CinematicA
           "--zs-art-glow-x": `${p.glowX * 100}%`,
           "--zs-art-glow-y": `${p.glowY * 100}%`,
           "--zs-art-glow-o": p.glowOpacity,
+          "--zs-art-glow-rgb": rgb,
         } as React.CSSProperties
       }
     >
       <svg className="zs-art__scene" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <defs>
           <radialGradient id={gradientId} cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(242, 194, 102, 0.9)" />
-            <stop offset="100%" stopColor="rgba(242, 194, 102, 0)" />
+            <stop offset="0%" stopColor={`rgba(${rgb}, 0.9)`} />
+            <stop offset="100%" stopColor={`rgba(${rgb}, 0)`} />
           </radialGradient>
         </defs>
         {p.accentLine && (
-          <line x1="0" x2="100" y1={p.horizonY * 100} y2={p.horizonY * 100} stroke="rgba(232, 179, 75, 0.28)" strokeWidth="0.3" />
+          <line x1="0" x2="100" y1={p.horizonY * 100} y2={p.horizonY * 100} stroke={`rgba(${rgb}, 0.28)`} strokeWidth="0.3" />
         )}
         <circle
           cx={p.glowX * 100}

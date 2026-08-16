@@ -2,9 +2,17 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { PosterCard } from "./PosterCard";
-import type { FixtureTitle } from "./fixtures";
+import type { FeedTitle } from "./fixtures";
 
-const movie: FixtureTitle = { id: "signal-zero", title: "Signal Zero", year: 2024, genre: "Thriller", progress: 0.62 };
+const movie: FeedTitle = {
+  id: "signal-zero",
+  title: "Signal Zero",
+  year: 2024,
+  genre: "Thriller",
+  kind: "movie",
+  artMood: "amber",
+  progress: 0.62,
+};
 
 describe("PosterCard", () => {
   it("shows title, year, and genre metadata", () => {

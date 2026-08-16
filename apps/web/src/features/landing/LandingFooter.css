@@ -7,8 +7,8 @@
   .zs-landing-footer__inner {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--zs-space-5);
-    padding-block: var(--zs-space-7);
+    gap: var(--zs-space-4);
+    padding-block: var(--zs-space-6);
   }
 
   .zs-landing-footer__brand {

@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { Sidebar } from "../components/Sidebar/Sidebar";
 import { MobileHeader } from "../components/MobileHeader/MobileHeader";
 import { BottomNav } from "../components/BottomNav/BottomNav";
+import { GlobalSearch } from "../components/GlobalSearch/GlobalSearch";
 import { SIDEBAR_STORAGE_KEY } from "./navigation";
 import "./AppShell.css";
 
@@ -13,6 +14,7 @@ import "./AppShell.css";
  *   ├── Skip link
  *   ├── Sidebar      (>= 768px; collapsible)
  *   ├── MobileHeader (< 768px)
+ *   ├── GlobalSearch (>= 768px; sticky)
  *   ├── Main > Outlet
  *   └── BottomNav    (< 768px)
  *
@@ -44,6 +46,7 @@ export function AppShell() {
         <Sidebar collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
         <div className="zs-shell__frame">
           <MobileHeader />
+          <GlobalSearch />
           <main id="zs-main" className="zs-main" tabIndex={-1}>
             <div className="zs-main__inner">
               <Outlet />
