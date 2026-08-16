@@ -1,0 +1,27 @@
+@layer components {
+  .zs-placeholder {
+    padding: var(--zs-space-7) 0;
+    max-width: 60ch;
+  }
+
+  .zs-placeholder__title {
+    font-size: var(--zs-text-display);
+    font-weight: var(--zs-weight-bold);
+    margin-bottom: var(--zs-space-3);
+  }
+
+  .zs-placeholder__description {
+    color: var(--zs-color-text-muted);
+    font-size: var(--zs-text-lg);
+    margin-bottom: var(--zs-space-5);
+  }
+
+  .zs-placeholder__route {
+    display: inline-block;
+    color: var(--zs-color-text-muted);
+    font-size: var(--zs-text-sm);
+    font-weight: var(--zs-weight-semibold);
+    letter-spacing: var(--zs-tracking-wide);
+    text-transform: uppercase;
+  }
+}

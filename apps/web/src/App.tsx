@@ -1,32 +1,50 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { Button } from "./components/Button/Button";
-import { Icon } from "./components/Icon/Icon";
-import "./App.css";
+import { AppShell } from "./app/AppShell";
+import { HomePage } from "./pages/HomePage";
+import { MoviesPage } from "./pages/MoviesPage";
+import { SeriesPage } from "./pages/SeriesPage";
+import { SearchPage } from "./pages/SearchPage";
+import { MyListPage } from "./pages/MyListPage";
+import { HistoryPage } from "./pages/HistoryPage";
+import { AccountPage } from "./pages/AccountPage";
+import { PlayerPage } from "./pages/PlayerPage";
+import { NotFoundPage } from "./pages/NotFoundPage";
 
-function FoundationPage() {
+/**
+ * Zen-Stream routes (M2: structural only — no feature logic yet).
+ *
+ * `/`        Home placeholder          (final landing arrives in M3)
+ * `/movies`  Movies placeholder
+ * `/series`  Series placeholder
+ * `/search`  Search placeholder
+ * `/my-list` Watchlist placeholder
+ * `/history` History placeholder
+ * `/account` Account placeholder
+ * `/player`  Player placeholder
+ * `*`        Not found
+ */
+export function AppRoutes() {
   return (
-    <main className="zs-foundation">
-      <p className="zs-foundation__kicker">ZEN-STREAM</p>
-      <h1>Foundation ready</h1>
-      <p className="zs-foundation__text">
-        The greenfield foundation is in place: web, server, contracts, tokens, and primitives.
-      </p>
-      <Button>Get started</Button>
-      <span className="zs-foundation__icon">
-        <Icon label="Zen-Stream mark">
-          <path d="M5 19V5l14 14V5" />
-        </Icon>
-      </span>
-    </main>
+    <Routes>
+      <Route element={<AppShell />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/movies" element={<MoviesPage />} />
+        <Route path="/series" element={<SeriesPage />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/my-list" element={<MyListPage />} />
+        <Route path="/history" element={<HistoryPage />} />
+        <Route path="/account" element={<AccountPage />} />
+        <Route path="/player" element={<PlayerPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
+    </Routes>
   );
 }
 
 export function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="*" element={<FoundationPage />} />
-      </Routes>
+      <AppRoutes />
     </BrowserRouter>
   );
 }
