@@ -274,6 +274,13 @@ export type MediaSeasonResponse = z.infer<typeof seasonResponseSchema>;
 
 /* ── Streams (playback) ───────────────────────────────────────────────── */
 
+export const mediaStreamParamsSchema = z.object({
+  subjectId: z.string().min(1),
+  se: z.coerce.number().int().min(0).default(0),
+  ep: z.coerce.number().int().min(0).default(0),
+});
+export type MediaStreamParams = z.infer<typeof mediaStreamParamsSchema>;
+
 const streamSchema = z.object({
   quality: z.string(),
   resolution: z.number().int().positive(),

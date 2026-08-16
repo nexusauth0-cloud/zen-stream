@@ -5,6 +5,7 @@ import {
   homeSubjectsSchema,
   infoResponseSchema,
   mediaSearchParamsSchema,
+  mediaStreamParamsSchema,
   mediaTypeFromSubjectType,
   searchResponseSchema,
   seasonResponseSchema,
@@ -237,5 +238,22 @@ describe("mediaSearchParamsSchema", () => {
 
   it("rejects an empty keyword", () => {
     expect(() => mediaSearchParamsSchema.parse({ keyword: "" })).toThrow();
+  });
+});
+
+describe("mediaStreamParamsSchema", () => {
+  it("coerces query params with movie defaults", () => {
+    const result = mediaStreamParamsSchema.parse({ subjectId: "123", se: "0", ep: "0" });
+    expect(result).toEqual({ subjectId: "123", se: 0, ep: 0 });
+  });
+
+  it("defaults se/ep when omitted", () => {
+    const result = mediaStreamParamsSchema.parse({ subjectId: "123" });
+    expect(result.se).toBe(0);
+    expect(result.ep).toBe(0);
+  });
+
+  it("rejects negative episode indexes", () => {
+    expect(() => mediaStreamParamsSchema.parse({ subjectId: "123", ep: -1 })).toThrow();
   });
 });
