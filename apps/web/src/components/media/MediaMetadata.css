@@ -1,0 +1,6 @@
+.zs-media-meta {
+  color: var(--zs-color-text-muted);
+  font-size: var(--zs-text-sm);
+  line-height: 1.5;
+  margin: 0;
+}

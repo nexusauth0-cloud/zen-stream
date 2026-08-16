@@ -13,21 +13,21 @@ function renderAt(path: string) {
 
 describe("routing", () => {
   const cases = [
-    { path: "/movies", title: "Movies" },
-    { path: "/series", title: "Series" },
-    { path: "/search", title: "Search" },
-    { path: "/my-list", title: "My List" },
-    { path: "/history", title: "History" },
-    { path: "/account", title: "Account" },
-    { path: "/player", title: "Player" },
+    { path: "/movies", title: "Movies", route: "/movies" },
+    { path: "/series", title: "Series", route: "/series" },
+    { path: "/search", title: "Search", route: "/search" },
+    { path: "/my-list", title: "My List", route: "/my-list" },
+    { path: "/history", title: "History", route: "/history" },
+    { path: "/account", title: "Account", route: "/account" },
+    { path: "/watch/123", title: "Watch", route: "/watch/:subjectId" },
   ] as const;
 
-  it.each(cases)("renders the $title placeholder at $path", ({ path, title }) => {
+  it.each(cases)("renders the $title placeholder at $path", ({ path, title, route }) => {
     renderAt(path);
 
     expect(screen.getByRole("heading", { level: 1, name: title })).toBeInTheDocument();
     expect(screen.getByTestId("placeholder-page")).toBeInTheDocument();
-    expect(screen.getByTestId("placeholder-route")).toHaveTextContent(path);
+    expect(screen.getByTestId("placeholder-route")).toHaveTextContent(route);
   });
 
   it("renders the cinematic landing page at /", () => {

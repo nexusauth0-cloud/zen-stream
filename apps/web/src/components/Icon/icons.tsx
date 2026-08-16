@@ -23,7 +23,13 @@ export type ZenIconName =
   | "chevron-left"
   | "chevron-right"
   | "play"
-  | "mark";
+  | "mark"
+  | "star"
+  | "alert"
+  | "check"
+  | "plus"
+  | "info"
+  | "image";
 
 export const ZEN_ICON_PATHS: Record<ZenIconName, ReactNode> = {
   home: (
@@ -73,6 +79,32 @@ export const ZEN_ICON_PATHS: Record<ZenIconName, ReactNode> = {
     <>
       <rect x="4" y="4" width="16" height="16" rx="4.5" />
       <path d="M8.5 8.5h7l-7 7h7" />
+    </>
+  ),
+  star: (
+    <path d="m12 3.5 2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 9.7l5.9-.9z" />
+  ),
+  alert: (
+    <>
+      <path d="M12 4 2.5 20h19z" />
+      <path d="M12 10v4" />
+      <path d="M12 17.2v.3" />
+    </>
+  ),
+  check: <path d="m4.5 12.5 5 5 10-11" />,
+  plus: <path d="M12 5v14M5 12h14" />,
+  info: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 11v5" />
+      <path d="M12 7.8v.3" />
+    </>
+  ),
+  image: (
+    <>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
+      <circle cx="9" cy="9.5" r="1.6" />
+      <path d="m4.5 17.5 5-4.5 3.5 3 3-2.5 3.5 4" />
     </>
   ),
 };

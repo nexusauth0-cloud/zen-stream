@@ -2,17 +2,28 @@
   :root {
     /* Color — cinematic near-black base with a warm, premium palette */
     --zs-color-bg: #0b0b0d;
+    --zs-color-background: #0b0b0d;
+    --zs-color-background-secondary: #101014;
     --zs-color-surface: #141417;
     --zs-color-surface-raised: #1c1c21;
+    --zs-color-surface-elevated: #1c1c21;
+    --zs-color-surface-hover: #232329;
     --zs-color-border: #2a2a31;
     --zs-color-text: #f5f2eb;
+    --zs-color-text-primary: #f5f2eb;
+    --zs-color-text-secondary: #b8b4ab;
     --zs-color-text-muted: #9d998f;
     --zs-color-accent: #e8b34b;
+    --zs-color-primary: #e8b34b;
+    --zs-color-primary-hover: #f2c266;
+    --zs-color-primary-ink: #1c1405;
     --zs-color-accent-hover: #f2c266;
     --zs-color-accent-ink: #1c1405;
+    --zs-color-aura: #59c9b3;
     --zs-color-success: #5bc98f;
     --zs-color-warning: #d99a2b;
     --zs-color-danger: #e5655f;
+    --zs-color-error: #e5655f;
     --zs-color-focus: #e8b34b;
 
     /* Typography */
@@ -65,5 +76,11 @@
 
     /* Layout */
     --zs-target-min: 44px;
+    --zs-container-max: 1320px;
+    --zs-container-narrow: 920px;
+    --zs-breakpoint-sm: 480px;
+    --zs-breakpoint-md: 768px;
+    --zs-breakpoint-lg: 1024px;
+    --zs-breakpoint-xl: 1280px;
   }
 }

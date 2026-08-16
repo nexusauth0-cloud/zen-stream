@@ -1,0 +1,26 @@
+.zs-media-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--zs-radius-pill);
+  font-size: var(--zs-text-xs);
+  font-weight: var(--zs-weight-semibold);
+  letter-spacing: var(--zs-tracking-wide);
+  text-transform: uppercase;
+  color: var(--zs-color-text-secondary);
+  background: rgb(255 255 255 / 0.08);
+  border: 1px solid rgb(255 255 255 / 0.1);
+  line-height: 1.4;
+}
+
+.zs-media-badge--movie {
+  color: #d9c9a8;
+}
+
+.zs-media-badge--series {
+  color: #a8c6d9;
+}
+
+.zs-media-badge--shorts {
+  color: #b9a8d9;
+}
