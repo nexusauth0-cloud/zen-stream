@@ -18,11 +18,11 @@ export function heroSubject(feed: MediaHomeFeed): MediaSubjectSummary | null {
   return feed.rows[0]?.subjects[0] ?? null;
 }
 
-/** Maps a home row type to a browse destination (movie/series rows only). */
-function browseActionFor(rowType: string | null): { label: string; to: string } | undefined {
-  if (rowType === "SUBJECTS_MOVIE") return { label: "See all movies", to: "/movies" };
-  if (rowType === "SUBJECTS_TV") return { label: "See all series", to: "/series" };
-  return undefined;
+/** Maps a home row to a real "See all" destination. */
+function browseActionFor(row: MediaHomeFeed["rows"][number]): { label: string; to: string } {
+  if (row.type === "SUBJECTS_MOVIE") return { label: "See all movies", to: "/movies" };
+  if (row.type === "SUBJECTS_TV") return { label: "See all series", to: "/series" };
+  return { label: "View all", to: `/collection/${row.opId}` };
 }
 
 /**
@@ -73,10 +73,7 @@ export function HomeFeed() {
       )}
       {data.rows.map((row) => (
         <section key={row.opId} className="zs-home-feed__section" aria-label={row.title}>
-          <SectionHeader
-            title={row.title}
-            action={browseActionFor(row.type)}
-          />
+          <SectionHeader title={row.title} action={browseActionFor(row)} />
           <MediaRail title={row.title}>
             {row.subjects.map((subject) => (
               <MediaCard key={subject.subjectId} item={subject} className="zs-media-rail__card" />

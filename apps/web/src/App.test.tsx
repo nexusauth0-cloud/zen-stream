@@ -5,11 +5,11 @@ import { AppRoutes } from "./App";
 import { WatchlistProvider } from "./store/watchlist";
 
 const HOME_FEED_BODY = {
-  total: 1,
+  total: 3,
   rows: [
     {
       title: "Trending Now",
-      opId: "op-1",
+      opId: "op-trending",
       type: null,
       total: 1,
       subjects: [
@@ -29,7 +29,69 @@ const HOME_FEED_BODY = {
         },
       ],
     },
+    {
+      title: "New Movies",
+      opId: "op-movies",
+      type: "SUBJECTS_MOVIE",
+      total: 1,
+      subjects: [
+        {
+          subjectId: "movie-2",
+          type: "movie",
+          title: "Midnight Express",
+          poster: null,
+          hasResource: true,
+          description: null,
+          releaseDate: null,
+          runtime: null,
+          genre: null,
+          rating: null,
+          language: null,
+          country: null,
+        },
+      ],
+    },
+    {
+      title: "New Series",
+      opId: "op-series",
+      type: "SUBJECTS_TV",
+      total: 1,
+      subjects: [
+        {
+          subjectId: "series-1",
+          type: "series",
+          title: "Night Shift",
+          poster: null,
+          hasResource: true,
+          description: null,
+          releaseDate: null,
+          runtime: null,
+          genre: null,
+          rating: null,
+          language: null,
+          country: null,
+        },
+      ],
+    },
   ],
+};
+
+const STREAM_BODY = {
+  streams: [
+    {
+      quality: "HD",
+      resolution: 1080,
+      url: "https://cdn.example.com/stream.mp4",
+      format: "mp4",
+      size: null,
+      codecName: null,
+      duration: null,
+      captions: [],
+      se: 0,
+      ep: 0,
+    },
+  ],
+  total: 1,
 };
 
 afterEach(() => {
@@ -46,11 +108,11 @@ function renderAt(path: string) {
   );
 }
 
-function mockHomeFeed() {
+function mockResponse(body: unknown) {
   vi.stubGlobal(
     "fetch",
     vi.fn(async () =>
-      new Response(JSON.stringify(HOME_FEED_BODY), {
+      new Response(JSON.stringify(body), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       }),
@@ -58,18 +120,17 @@ function mockHomeFeed() {
   );
 }
 
+function mockHomeFeed() {
+  mockResponse(HOME_FEED_BODY);
+}
+
 describe("routing", () => {
-  const cases = [
-    { path: "/movies", title: "Movies", route: "/movies" },
-    { path: "/series", title: "Series", route: "/series" },
-    { path: "/search", title: "Search", route: "/search" },
-    { path: "/my-list", title: "My List", route: "/my-list" },
+  const placeholderCases = [
     { path: "/history", title: "History", route: "/history" },
     { path: "/account", title: "Account", route: "/account" },
-    { path: "/watch/123", title: "Watch", route: "/watch/:subjectId" },
   ] as const;
 
-  it.each(cases)("renders the $title placeholder at $path", ({ path, title, route }) => {
+  it.each(placeholderCases)("renders the $title placeholder at $path", ({ path, title, route }) => {
     renderAt(path);
 
     expect(screen.getByRole("heading", { level: 1, name: title })).toBeInTheDocument();
@@ -86,6 +147,50 @@ describe("routing", () => {
     });
     expect(screen.getByRole("heading", { name: "Trending Now" })).toBeInTheDocument();
     expect(screen.queryByTestId("placeholder-page")).not.toBeInTheDocument();
+  });
+
+  it("renders the movie browse page at /movies", async () => {
+    mockHomeFeed();
+    renderAt("/movies");
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { level: 1, name: "Movies" })).toBeInTheDocument();
+    });
+    expect(await screen.findByRole("link", { name: "Midnight Express" })).toBeInTheDocument();
+  });
+
+  it("renders the series browse page at /series", async () => {
+    mockHomeFeed();
+    renderAt("/series");
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { level: 1, name: "TV Series" })).toBeInTheDocument();
+    });
+    expect(await screen.findByRole("link", { name: "Night Shift" })).toBeInTheDocument();
+  });
+
+  it("renders the search page at /search", () => {
+    renderAt("/search");
+
+    expect(screen.getByRole("heading", { level: 1, name: "Search" })).toBeInTheDocument();
+    expect(screen.getByRole("searchbox", { name: "Search the catalog" })).toBeInTheDocument();
+  });
+
+  it("renders the empty my-list page at /my-list", () => {
+    renderAt("/my-list");
+
+    expect(screen.getByRole("heading", { level: 1, name: "My List" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your list is empty" })).toBeInTheDocument();
+  });
+
+  it("renders the player at /watch/123", async () => {
+    mockResponse(STREAM_BODY);
+    renderAt("/watch/123");
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Now playing" })).toBeInTheDocument();
+    });
+    expect(screen.getByLabelText("HD stream")).toBeInTheDocument();
   });
 
   it("renders the not-found page for unknown routes", () => {
@@ -123,14 +228,14 @@ describe("routing", () => {
 });
 
 describe("active navigation", () => {
-  it("marks the active route with aria-current on the sidebar item", () => {
+  it("marks the active route with aria-current on the header nav item", () => {
     renderAt("/movies");
 
-    const sidebar = screen.getByRole("navigation", { name: "Primary navigation" });
-    const movies = within(sidebar).getByRole("link", { name: "Movies" });
+    const headerNav = screen.getByRole("navigation", { name: "Primary navigation" });
+    const movies = within(headerNav).getByRole("link", { name: "Movies" });
     expect(movies).toHaveAttribute("aria-current", "page");
 
-    const home = within(sidebar).getByRole("link", { name: "Home" });
+    const home = within(headerNav).getByRole("link", { name: "Home" });
     expect(home).not.toHaveAttribute("aria-current");
   });
 

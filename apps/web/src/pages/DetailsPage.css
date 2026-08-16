@@ -1,0 +1,106 @@
+.zs-details {
+  min-width: 0;
+}
+
+.zs-details__hero-skeleton {
+  height: clamp(14rem, 38vh, 24rem);
+  margin-inline: calc(50% - 50vw);
+  margin-bottom: var(--zs-space-6);
+  background: linear-gradient(
+    100deg,
+    var(--zs-color-surface) 40%,
+    var(--zs-color-surface-raised) 50%,
+    var(--zs-color-surface) 60%
+  );
+  background-size: 200% 100%;
+  animation: zs-details-shimmer 1.4s ease-in-out infinite;
+  border-bottom: 1px solid var(--zs-color-border);
+}
+
+.zs-details__content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--zs-space-5);
+  padding-top: var(--zs-space-5);
+}
+
+.zs-details__poster {
+  max-width: 240px;
+}
+
+.zs-details__poster-image {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: var(--zs-radius-sm);
+  border: 1px solid var(--zs-color-border);
+}
+
+.zs-details__poster-fallback {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  display: grid;
+  place-items: center;
+  border-radius: var(--zs-radius-sm);
+  border: 1px solid var(--zs-color-border);
+  background: var(--zs-color-surface-raised);
+  color: var(--zs-color-text-muted);
+}
+
+.zs-details__heading {
+  font-size: var(--zs-text-xl);
+  font-weight: var(--zs-weight-bold);
+  margin-bottom: var(--zs-space-2);
+}
+
+.zs-details__description {
+  color: var(--zs-color-text-secondary);
+  font-size: var(--zs-text-sm);
+  max-width: 72ch;
+}
+
+.zs-details__staff {
+  margin-top: var(--zs-space-4);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--zs-space-3);
+  list-style: none;
+}
+
+.zs-details__staff-member {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.zs-details__staff-name {
+  font-weight: var(--zs-weight-semibold);
+  font-size: var(--zs-text-sm);
+}
+
+.zs-details__staff-role {
+  color: var(--zs-color-text-muted);
+  font-size: var(--zs-text-xs);
+}
+
+@media (min-width: 768px) {
+  .zs-details__content {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: var(--zs-space-6);
+  }
+}
+
+@keyframes zs-details-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zs-details__hero-skeleton {
+    animation: none;
+  }
+}

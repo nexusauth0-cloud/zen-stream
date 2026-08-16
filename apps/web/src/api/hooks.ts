@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type {
   MediaHomeFeed,
+  MediaHomeSubjects,
   MediaInfo,
   MediaSearchResponse,
   MediaSeasonResponse,
@@ -9,6 +10,7 @@ import type {
 import { MediaApiError } from "./client";
 import {
   fetchHomeFeed,
+  fetchHomeSubjects,
   fetchMediaInfo,
   fetchSeason,
   fetchStream,
@@ -82,6 +84,14 @@ export function useAsyncData<T>(
 
 export function useHomeFeed() {
   return useAsyncData<MediaHomeFeed>((signal) => fetchHomeFeed(signal), []);
+}
+
+export function useHomeSubjects(opId: string | undefined) {
+  return useAsyncData<MediaHomeSubjects>(
+    (signal) => fetchHomeSubjects(opId ?? "", signal),
+    [opId],
+    opId !== undefined,
+  );
 }
 
 export interface UseSearchOptions {

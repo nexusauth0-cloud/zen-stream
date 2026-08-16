@@ -1,5 +1,11 @@
-import { PlaceholderPage } from "../components/PlaceholderPage/PlaceholderPage";
+import { BrowsePage } from "../features/browse/BrowsePage";
 
 export function MoviesPage() {
-  return <PlaceholderPage title="Movies" description="Movie discovery will appear here." route="/movies" />;
+  return (
+    <BrowsePage
+      title="Movies"
+      kind="movie"
+      emptyMessage="No movies are available in the catalog right now."
+    />
+  );
 }

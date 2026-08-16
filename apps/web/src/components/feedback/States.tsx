@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { ZenIcon } from "../Icon/icons";
 import "./States.css";
 
@@ -5,15 +6,18 @@ export interface EmptyStateProps {
   title: string;
   message?: string;
   className?: string;
+  /** Optional action rendered below the message. */
+  children?: ReactNode;
 }
 
 /** Quiet empty-region state (no results, empty list, etc.). */
-export function EmptyState({ title, message, className }: EmptyStateProps) {
+export function EmptyState({ title, message, className, children }: EmptyStateProps) {
   return (
     <div className={`zs-state zs-state--empty${className ? ` ${className}` : ""}`} role="status">
       <ZenIcon name="film" size={40} className="zs-state__icon" />
       <h3 className="zs-state__title">{title}</h3>
       {message && <p className="zs-state__message">{message}</p>}
+      {children}
     </div>
   );
 }

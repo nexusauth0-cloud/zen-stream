@@ -1,0 +1,22 @@
+.zs-browse {
+  min-width: 0;
+}
+
+.zs-browse__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--zs-space-3);
+  margin-bottom: var(--zs-space-5);
+}
+
+.zs-browse__title {
+  font-size: var(--zs-text-3xl);
+  font-weight: var(--zs-weight-bold);
+}
+
+.zs-browse__count {
+  color: var(--zs-color-text-muted);
+  font-size: var(--zs-text-sm);
+  white-space: nowrap;
+}

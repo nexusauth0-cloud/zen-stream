@@ -1,0 +1,22 @@
+.zs-my-list {
+  min-width: 0;
+}
+
+.zs-my-list__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--zs-space-3);
+  margin-bottom: var(--zs-space-5);
+}
+
+.zs-my-list__title {
+  font-size: var(--zs-text-3xl);
+  font-weight: var(--zs-weight-bold);
+}
+
+.zs-my-list__count {
+  color: var(--zs-color-text-muted);
+  font-size: var(--zs-text-sm);
+  white-space: nowrap;
+}

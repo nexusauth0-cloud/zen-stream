@@ -1,5 +1,11 @@
-import { PlaceholderPage } from "../components/PlaceholderPage/PlaceholderPage";
+import { BrowsePage } from "../features/browse/BrowsePage";
 
 export function SeriesPage() {
-  return <PlaceholderPage title="Series" description="Series discovery will appear here." route="/series" />;
+  return (
+    <BrowsePage
+      title="TV Series"
+      kind="series"
+      emptyMessage="No series are available in the catalog right now."
+    />
+  );
 }
