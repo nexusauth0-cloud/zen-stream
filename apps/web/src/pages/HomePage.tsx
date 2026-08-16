@@ -1,5 +1,5 @@
-import { LandingPage } from "../features/landing/LandingPage";
+import { HomeFeed } from "../features/home/HomeFeed";
 
 export function HomePage() {
-  return <LandingPage />;
+  return <HomeFeed />;
 }

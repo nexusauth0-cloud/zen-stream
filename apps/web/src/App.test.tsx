@@ -1,13 +1,60 @@
-import { describe, expect, it } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { AppRoutes } from "./App";
+import { WatchlistProvider } from "./store/watchlist";
+
+const HOME_FEED_BODY = {
+  total: 1,
+  rows: [
+    {
+      title: "Trending Now",
+      opId: "op-1",
+      type: null,
+      total: 1,
+      subjects: [
+        {
+          subjectId: "movie-1",
+          type: "movie",
+          title: "Harbor Lights",
+          poster: null,
+          hasResource: true,
+          description: null,
+          releaseDate: null,
+          runtime: null,
+          genre: null,
+          rating: null,
+          language: null,
+          country: null,
+        },
+      ],
+    },
+  ],
+};
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 function renderAt(path: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
-      <AppRoutes />
+      <WatchlistProvider>
+        <AppRoutes />
+      </WatchlistProvider>
     </MemoryRouter>,
+  );
+}
+
+function mockHomeFeed() {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      new Response(JSON.stringify(HOME_FEED_BODY), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    ),
   );
 }
 
@@ -30,10 +77,14 @@ describe("routing", () => {
     expect(screen.getByTestId("placeholder-route")).toHaveTextContent(route);
   });
 
-  it("renders the cinematic landing page at /", () => {
+  it("renders the API-driven discovery home at /", async () => {
+    mockHomeFeed();
     renderAt("/");
 
-    expect(screen.getByRole("heading", { level: 1, name: /the long afterlight/i })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { level: 1, name: "Harbor Lights" })).toBeInTheDocument();
+    });
+    expect(screen.getByRole("heading", { name: "Trending Now" })).toBeInTheDocument();
     expect(screen.queryByTestId("placeholder-page")).not.toBeInTheDocument();
   });
 
@@ -44,18 +95,26 @@ describe("routing", () => {
     expect(screen.getByText(/this page does not exist/i)).toBeInTheDocument();
   });
 
-  it("keeps a correct heading hierarchy with a single h1", () => {
+  it("keeps a correct heading hierarchy with a single h1", async () => {
+    mockHomeFeed();
     renderAt("/");
 
+    await waitFor(() => {
+      expect(screen.getAllByRole("heading").length).toBeGreaterThan(0);
+    });
     const headings = screen.getAllByRole("heading");
     expect(headings.filter((h) => h.tagName === "H1")).toHaveLength(1);
     // No heading level is skipped: h1 followed by h2 sections.
     expect(headings.every((h) => ["H1", "H2"].includes(h.tagName))).toBe(true);
   });
 
-  it("hides decorative navigation icons from assistive technology", () => {
+  it("hides decorative navigation icons from assistive technology", async () => {
+    mockHomeFeed();
     renderAt("/");
 
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { level: 1, name: "Harbor Lights" })).toBeInTheDocument();
+    });
     const main = screen.getByRole("main");
     expect(within(main).queryByRole("img")).not.toBeInTheDocument();
     // No icon is a meaningful role anywhere in the shell.

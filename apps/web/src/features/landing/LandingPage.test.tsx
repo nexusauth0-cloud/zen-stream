@@ -1,30 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { AppRoutes } from "../../App";
+import { LandingPage } from "./LandingPage";
 import { HOME_COPY, HOME_FEED, HOME_FEED_SECTIONS } from "./fixtures";
 
 function renderLanding() {
   return render(
-    <MemoryRouter initialEntries={["/"]}>
-      <AppRoutes />
+    <MemoryRouter>
+      <LandingPage />
     </MemoryRouter>,
   );
 }
 
-describe("streaming homepage", () => {
-  it("is served at the home route only", () => {
-    const { unmount } = renderLanding();
-    expect(screen.getByRole("heading", { level: 1, name: HOME_FEED.hero.title })).toBeInTheDocument();
-    unmount();
-
-    render(
-      <MemoryRouter initialEntries={["/movies"]}>
-        <AppRoutes />
-      </MemoryRouter>,
-    );
-    expect(screen.queryByRole("heading", { level: 1, name: HOME_FEED.hero.title })).not.toBeInTheDocument();
-  });
+describe("streaming homepage composition", () => {
 
   it("exposes exactly one h1", () => {
     renderLanding();
