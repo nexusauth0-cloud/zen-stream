@@ -1,0 +1,69 @@
+@layer tokens {
+  :root {
+    /* Color — cinematic near-black base with a warm, premium palette */
+    --zs-color-bg: #0b0b0d;
+    --zs-color-surface: #141417;
+    --zs-color-surface-raised: #1c1c21;
+    --zs-color-border: #2a2a31;
+    --zs-color-text: #f5f2eb;
+    --zs-color-text-muted: #9d998f;
+    --zs-color-accent: #e8b34b;
+    --zs-color-accent-hover: #f2c266;
+    --zs-color-accent-ink: #1c1405;
+    --zs-color-success: #5bc98f;
+    --zs-color-warning: #d99a2b;
+    --zs-color-danger: #e5655f;
+    --zs-color-focus: #e8b34b;
+
+    /* Typography */
+    --zs-font-display: "Fraunces", "Georgia", serif;
+    --zs-font-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --zs-text-xs: 0.75rem;
+    --zs-text-sm: 0.875rem;
+    --zs-text-base: 1rem;
+    --zs-text-lg: 1.125rem;
+    --zs-text-xl: 1.25rem;
+    --zs-text-2xl: 1.5rem;
+    --zs-text-3xl: 1.875rem;
+    --zs-text-display: clamp(2.5rem, 6vw, 4.5rem);
+    --zs-weight-regular: 400;
+    --zs-weight-medium: 500;
+    --zs-weight-semibold: 600;
+    --zs-weight-bold: 700;
+    --zs-leading-tight: 1.1;
+    --zs-leading-normal: 1.5;
+    --zs-tracking-tight: -0.02em;
+    --zs-tracking-wide: 0.08em;
+
+    /* Spacing — 4px base scale */
+    --zs-space-1: 0.25rem;
+    --zs-space-2: 0.5rem;
+    --zs-space-3: 0.75rem;
+    --zs-space-4: 1rem;
+    --zs-space-5: 1.5rem;
+    --zs-space-6: 2rem;
+    --zs-space-7: 3rem;
+    --zs-space-8: 4rem;
+
+    /* Radii */
+    --zs-radius-sm: 0.375rem;
+    --zs-radius-md: 0.625rem;
+    --zs-radius-lg: 1rem;
+    --zs-radius-xl: 1.5rem;
+    --zs-radius-pill: 999px;
+
+    /* Shadows */
+    --zs-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --zs-shadow-md: 0 8px 24px rgb(0 0 0 / 0.45);
+
+    /* Motion */
+    --zs-duration-fast: 120ms;
+    --zs-duration-base: 200ms;
+    --zs-duration-slow: 350ms;
+    --zs-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --zs-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+    /* Layout */
+    --zs-target-min: 44px;
+  }
+}

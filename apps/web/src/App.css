@@ -1,0 +1,35 @@
+@layer components {
+  .zs-foundation {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--zs-space-4);
+    min-height: 100vh;
+    padding: var(--zs-space-6);
+    text-align: center;
+  }
+
+  .zs-foundation__kicker {
+    color: var(--zs-color-accent);
+    font-size: var(--zs-text-sm);
+    font-weight: var(--zs-weight-semibold);
+    letter-spacing: var(--zs-tracking-wide);
+    text-transform: uppercase;
+  }
+
+  .zs-foundation h1 {
+    font-size: var(--zs-text-display);
+    font-weight: var(--zs-weight-bold);
+  }
+
+  .zs-foundation__text {
+    max-width: 46ch;
+    color: var(--zs-color-text-muted);
+  }
+
+  .zs-foundation__icon {
+    display: inline-flex;
+    color: var(--zs-color-accent);
+  }
+}

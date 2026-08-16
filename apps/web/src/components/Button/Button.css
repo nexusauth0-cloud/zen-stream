@@ -1,0 +1,62 @@
+@layer components {
+  .zs-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--zs-space-2);
+    border: 1px solid transparent;
+    border-radius: var(--zs-radius-pill);
+    font-family: var(--zs-font-ui);
+    font-weight: var(--zs-weight-semibold);
+    line-height: 1;
+    user-select: none;
+    transition:
+      background-color var(--zs-duration-fast) var(--zs-ease-out),
+      border-color var(--zs-duration-fast) var(--zs-ease-out),
+      color var(--zs-duration-fast) var(--zs-ease-out);
+  }
+
+  .zs-button--primary {
+    background: var(--zs-color-accent);
+    color: var(--zs-color-accent-ink);
+  }
+
+  .zs-button--primary:hover:not(:disabled) {
+    background: var(--zs-color-accent-hover);
+  }
+
+  .zs-button--secondary {
+    background: var(--zs-color-surface-raised);
+    border-color: var(--zs-color-border);
+    color: var(--zs-color-text);
+  }
+
+  .zs-button--secondary:hover:not(:disabled) {
+    border-color: var(--zs-color-text-muted);
+  }
+
+  .zs-button--ghost {
+    background: transparent;
+    color: var(--zs-color-text-muted);
+  }
+
+  .zs-button--ghost:hover:not(:disabled) {
+    color: var(--zs-color-text);
+  }
+
+  .zs-button--md {
+    min-height: var(--zs-target-min);
+    padding: 0 var(--zs-space-5);
+    font-size: var(--zs-text-base);
+  }
+
+  .zs-button--sm {
+    min-height: var(--zs-target-min);
+    padding: 0 var(--zs-space-4);
+    font-size: var(--zs-text-sm);
+  }
+
+  .zs-button:disabled {
+    opacity: 0.5;
+  }
+}
