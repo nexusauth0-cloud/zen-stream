@@ -1,0 +1,5 @@
+@layer components {
+  .zs-landing {
+    padding-top: var(--zs-space-5);
+  }
+}

@@ -1,0 +1,47 @@
+@layer components {
+  .zs-section {
+    padding-block: var(--zs-space-8);
+  }
+
+  .zs-section__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--zs-space-3);
+    margin-bottom: var(--zs-space-5);
+  }
+
+  .zs-section-eyebrow {
+    color: var(--zs-color-accent);
+    font-size: var(--zs-text-xs);
+    font-weight: var(--zs-weight-semibold);
+    letter-spacing: var(--zs-tracking-wide);
+    text-transform: uppercase;
+    margin-bottom: var(--zs-space-2);
+  }
+
+  .zs-section-title {
+    font-size: clamp(1.5rem, 3.5vw, 2.25rem);
+    font-weight: var(--zs-weight-bold);
+    text-wrap: balance;
+  }
+
+  .zs-section__note {
+    color: var(--zs-color-text-muted);
+    font-size: var(--zs-text-xs);
+  }
+
+  .zs-see-all {
+    flex-shrink: 0;
+    color: var(--zs-color-text-muted);
+    font-size: var(--zs-text-sm);
+    font-weight: var(--zs-weight-medium);
+    min-height: var(--zs-target-min);
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .zs-see-all:hover {
+    color: var(--zs-color-accent);
+  }
+}

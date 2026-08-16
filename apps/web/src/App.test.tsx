@@ -13,7 +13,6 @@ function renderAt(path: string) {
 
 describe("routing", () => {
   const cases = [
-    { path: "/", title: "Home" },
     { path: "/movies", title: "Movies" },
     { path: "/series", title: "Series" },
     { path: "/search", title: "Search" },
@@ -31,6 +30,13 @@ describe("routing", () => {
     expect(screen.getByTestId("placeholder-route")).toHaveTextContent(path);
   });
 
+  it("renders the cinematic landing page at /", () => {
+    renderAt("/");
+
+    expect(screen.getByRole("heading", { level: 1, name: /story is already waiting/i })).toBeInTheDocument();
+    expect(screen.queryByTestId("placeholder-page")).not.toBeInTheDocument();
+  });
+
   it("renders the not-found page for unknown routes", () => {
     renderAt("/does-not-exist");
 
@@ -42,8 +48,9 @@ describe("routing", () => {
     renderAt("/");
 
     const headings = screen.getAllByRole("heading");
-    expect(headings).toHaveLength(1);
-    expect(headings[0]?.tagName).toBe("H1");
+    expect(headings.filter((h) => h.tagName === "H1")).toHaveLength(1);
+    // No heading level is skipped: h1 followed by h2 sections.
+    expect(headings.every((h) => ["H1", "H2"].includes(h.tagName))).toBe(true);
   });
 
   it("hides decorative navigation icons from assistive technology", () => {

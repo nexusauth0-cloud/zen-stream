@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "../components/PlaceholderPage/PlaceholderPage";
+import { LandingPage } from "../features/landing/LandingPage";
 
 export function HomePage() {
-  return <PlaceholderPage title="Home" description="Your home screen will appear here." route="/" />;
+  return <LandingPage />;
 }
