@@ -1,5 +1,9 @@
 .zs-media-rail {
   position: relative;
+  /* Cards-per-viewport targets: fraction keeps a partial "next card"
+     visible so the rail reads as scrollable. */
+  --zs-rail-cards: 2.4;
+  --zs-rail-gap: var(--zs-space-3);
 }
 
 .zs-media-rail__controls {
@@ -11,7 +15,7 @@
     display: flex;
     gap: var(--zs-space-2);
     position: absolute;
-    top: -2.6rem;
+    top: -2.4rem;
     right: 0;
   }
 }
@@ -19,8 +23,8 @@
 .zs-media-rail__scroll {
   display: grid;
   place-items: center;
-  width: var(--zs-target-min);
-  height: var(--zs-target-min);
+  width: 2.25rem;
+  height: 2.25rem;
   border-radius: var(--zs-radius-pill);
   color: var(--zs-color-text-secondary);
   background: var(--zs-color-surface-elevated);
@@ -57,12 +61,44 @@
 .zs-media-rail__track {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(9.5rem, 9.5rem);
-  gap: var(--zs-space-4);
+  grid-auto-columns: calc(
+    (100% - (var(--zs-rail-cards) - 1) * var(--zs-rail-gap)) / var(--zs-rail-cards)
+  );
+  gap: var(--zs-rail-gap);
+}
+
+@media (min-width: 480px) {
+  .zs-media-rail {
+    --zs-rail-cards: 3.2;
+  }
 }
 
 @media (min-width: 768px) {
-  .zs-media-rail__track {
-    grid-auto-columns: minmax(11rem, 11rem);
+  .zs-media-rail {
+    --zs-rail-cards: 4.5;
+  }
+}
+
+@media (min-width: 1024px) {
+  .zs-media-rail {
+    --zs-rail-cards: 5.5;
+  }
+}
+
+@media (min-width: 1366px) {
+  .zs-media-rail {
+    --zs-rail-cards: 7.5;
+  }
+}
+
+@media (min-width: 1600px) {
+  .zs-media-rail {
+    --zs-rail-cards: 8.5;
+  }
+}
+
+@media (min-width: 1920px) {
+  .zs-media-rail {
+    --zs-rail-cards: 9.5;
   }
 }
