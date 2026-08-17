@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { MediaSearchItem, MediaSubjectSummary } from "@zen-stream/contracts";
 import { useHomeFeed, useSearch } from "../api/hooks";
+import { normalizeSearchKeyword } from "../api/media";
 import { EmptyState, ErrorState } from "../components/feedback/States";
 import { SkeletonGrid, SkeletonRail } from "../components/feedback/LoadingSkeleton";
 import { MediaCard } from "../components/media/MediaCard";
@@ -49,7 +50,9 @@ export function SearchPage() {
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       const trimmed = input.trim();
-      if (trimmed === query) return;
+      // Case changes are not a new search: the API boundary normalizes the
+      // keyword, so "From" and "from" must not trigger redundant fetches.
+      if (normalizeSearchKeyword(trimmed) === normalizeSearchKeyword(query)) return;
       setQuery(trimmed);
       setPages(1);
       if (trimmed) {

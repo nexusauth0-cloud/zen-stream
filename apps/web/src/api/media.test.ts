@@ -5,6 +5,7 @@ import {
   fetchMediaInfo,
   fetchSeason,
   fetchStream,
+  normalizeSearchKeyword,
   searchMedia,
 } from "./media";
 
@@ -109,6 +110,25 @@ describe("media endpoints", () => {
 
     const [url] = fetchMock.mock.calls[0]!;
     expect(url).toBe("/api/v1/media/search?q=avatar+movie&page=2&perPage=10");
+  });
+
+  it("normalizes the search keyword case-insensitively at the boundary", async () => {
+    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => jsonResponse({ items: [], pager: {} }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await searchMedia({ keyword: "  FROM  " });
+    await searchMedia({ keyword: "fRoM" });
+    await searchMedia({ keyword: "from" });
+
+    const keywords = fetchMock.mock.calls.map((call) => new URL(String(call[0]), "http://local").searchParams.get("q"));
+    expect(new Set(keywords)).toEqual(new Set(["from"]));
+  });
+
+  it("trims whitespace during normalization", () => {
+    expect(normalizeSearchKeyword("  Reacher   ")).toBe("reacher");
+    expect(normalizeSearchKeyword("From")).toBe("from");
+    expect(normalizeSearchKeyword("FROM")).toBe("from");
+    expect(normalizeSearchKeyword("")).toBe("");
   });
 
   it("encodes subject ids in info and season paths", async () => {

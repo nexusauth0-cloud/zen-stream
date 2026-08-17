@@ -20,6 +20,15 @@ export interface StreamParams {
   ep: number;
 }
 
+/**
+ * Shared search boundary: every entry point (header, search page, tests)
+ * funnels through this normalization so "From", "from" and "FROM" all
+ * query the catalog identically.
+ */
+export function normalizeSearchKeyword(keyword: string): string {
+  return keyword.trim().toLowerCase();
+}
+
 function signalOption(signal?: AbortSignal): { signal?: AbortSignal } {
   return signal ? { signal } : {};
 }
@@ -42,7 +51,7 @@ export function searchMedia(
   signal?: AbortSignal,
 ): Promise<MediaSearchResponse> {
   const query = new URLSearchParams({
-    q: params.keyword,
+    q: normalizeSearchKeyword(params.keyword),
     page: String(params.page ?? 1),
     perPage: String(params.perPage ?? 20),
   });
