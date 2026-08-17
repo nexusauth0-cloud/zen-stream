@@ -38,7 +38,14 @@ describe("AppShell", () => {
     const targets = within(nav)
       .getAllByRole("link")
       .map((link) => link.getAttribute("href"));
-    expect(targets).toEqual(["/", "/movies", "/series", "/genres", "/my-list"]);
+    expect(targets).toEqual([
+      "/",
+      "/movies",
+      "/series",
+      "/animation",
+      "/most-watched",
+      "/genres",
+    ]);
   });
 
   it("renders the brand as a link home", () => {
@@ -80,7 +87,16 @@ describe("AppShell", () => {
     const targets = within(footerNav)
       .getAllByRole("link")
       .map((link) => link.getAttribute("href"));
-    expect(targets).toEqual(["/", "/movies", "/series", "/genres", "/search", "/my-list"]);
+    expect(targets).toEqual([
+      "/",
+      "/movies",
+      "/series",
+      "/animation",
+      "/most-watched",
+      "/genres",
+      "/search",
+      "/my-list",
+    ]);
   });
 });
 

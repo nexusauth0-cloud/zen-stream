@@ -1,7 +1,23 @@
 import { useMemo } from "react";
-import type { MediaSubjectSummary } from "@zen-stream/contracts";
+import type { MediaHomeRow, MediaSubjectSummary } from "@zen-stream/contracts";
 import { useHomeFeed } from "../../api/hooks";
 import type { AsyncState } from "../../api/hooks";
+
+export type FeedRowSelector = (row: MediaHomeRow) => boolean;
+
+/** Catalog rows that are whole-movie collections. */
+export const selectMovieRows: FeedRowSelector = (row) => row.type === "SUBJECTS_MOVIE";
+
+/** Catalog rows that are whole-series collections. */
+export const selectSeriesRows: FeedRowSelector = (row) => row.type === "SUBJECTS_TV";
+
+/** Animation catalog: any feed collection about anime or animation. */
+export const selectAnimationRows: FeedRowSelector = (row) =>
+  /anime|animation/i.test(row.title);
+
+/** Most-watched catalog: the feed's own popularity signals. */
+export const selectMostWatchedRows: FeedRowSelector = (row) =>
+  /popular|trending|most watched|must-watch|hot/i.test(row.title);
 
 export interface BrowseRow {
   title: string;
@@ -10,7 +26,7 @@ export interface BrowseRow {
 
 export interface BrowseSubjectsState {
   status: AsyncState<unknown>["status"];
-  /** Feed rows of the requested kind, deduplicated across the page. */
+  /** Feed rows selected by the caller, deduplicated across the page. */
   rows: BrowseRow[];
   total: number;
   error: string | null;
@@ -18,23 +34,19 @@ export interface BrowseSubjectsState {
 }
 
 /**
- * Browse catalog derived from the live home feed: every row whose type
- * matches the requested kind becomes a section (e.g. "New Movies",
- * "Nollywood Movie"), deduplicated by subject id across the page. Real
- * catalog data only — no fixtures.
+ * Browse catalog derived from the live home feed: every row the selector
+ * matches becomes a section (e.g. "New Movies", "Nollywood Movie",
+ * "Anime[English Dubbed]"), deduplicated by subject id across the page.
+ * Real catalog data only — no fixtures.
  */
-export function useBrowseSubjects(kind: "movie" | "series"): BrowseSubjectsState {
+export function useBrowseSubjects(select: FeedRowSelector): BrowseSubjectsState {
   const { status, data, error, retry } = useHomeFeed();
 
   const rows = useMemo(() => {
     if (!data) return [];
     const seen = new Set<string>();
-    const source =
-      kind === "movie"
-        ? data.rows.filter((row) => row.type === "SUBJECTS_MOVIE")
-        : data.rows.filter((row) => row.type === "SUBJECTS_TV");
     const sections: BrowseRow[] = [];
-    for (const row of source) {
+    for (const row of data.rows.filter(select)) {
       const subjects: MediaSubjectSummary[] = [];
       for (const subject of row.subjects) {
         if (seen.has(subject.subjectId)) continue;
@@ -44,7 +56,7 @@ export function useBrowseSubjects(kind: "movie" | "series"): BrowseSubjectsState
       if (subjects.length > 0) sections.push({ title: row.title, subjects });
     }
     return sections;
-  }, [data, kind]);
+  }, [data, select]);
 
   const total = useMemo(
     () => rows.reduce((sum, row) => sum + row.subjects.length, 0),

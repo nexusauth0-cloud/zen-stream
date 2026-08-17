@@ -30,7 +30,9 @@ export type ZenIconName =
   | "plus"
   | "info"
   | "image"
-  | "grid";
+  | "grid"
+  | "sparkle"
+  | "flame";
 
 export const ZEN_ICON_PATHS: Record<ZenIconName, ReactNode> = {
   home: (
@@ -115,6 +117,12 @@ export const ZEN_ICON_PATHS: Record<ZenIconName, ReactNode> = {
       <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
       <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
     </>
+  ),
+  sparkle: (
+    <path d="M12 4c.5 4.4 2.7 6.6 7 7-4.3.4-6.5 2.6-7 7-.5-4.4-2.7-6.6-7-7 4.3-.4 6.5-2.6 7-7z" />
+  ),
+  flame: (
+    <path d="M12 3.5c1.4 2.5 4.4 4 4.4 7.4a4.4 4.4 0 0 1-8.8 0c0-1.6.7-2.9 1.5-4.1.4 1.1 1.1 1.9 2 2.3-.3-2.4-.1-4.3 1.7-5.6z" />
   ),
 };
 

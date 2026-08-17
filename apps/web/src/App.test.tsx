@@ -5,7 +5,7 @@ import { AppRoutes } from "./App";
 import { WatchlistProvider } from "./store/watchlist";
 
 const HOME_FEED_BODY = {
-  total: 3,
+  total: 4,
   rows: [
     {
       title: "Trending Now",
@@ -30,7 +30,7 @@ const HOME_FEED_BODY = {
       ],
     },
     {
-      title: "New Movies",
+      title: "Popular Movies",
       opId: "op-movies",
       type: "SUBJECTS_MOVIE",
       total: 1,
@@ -39,6 +39,28 @@ const HOME_FEED_BODY = {
           subjectId: "movie-2",
           type: "movie",
           title: "Midnight Express",
+          poster: null,
+          hasResource: true,
+          description: null,
+          releaseDate: null,
+          runtime: null,
+          genre: null,
+          rating: null,
+          language: null,
+          country: null,
+        },
+      ],
+    },
+    {
+      title: "Anime[English Dubbed]",
+      opId: "op-anime",
+      type: null,
+      total: 1,
+      subjects: [
+        {
+          subjectId: "series-2",
+          type: "series",
+          title: "Shonen Rising",
           poster: null,
           hasResource: true,
           description: null,
@@ -198,8 +220,33 @@ describe("routing", () => {
     expect(links.map((link) => link.getAttribute("href"))).toEqual([
       "/collection/op-trending",
       "/collection/op-movies",
+      "/collection/op-anime",
       "/collection/op-series",
     ]);
+  });
+
+  it("renders the animation catalog at /animation", async () => {
+    mockHomeFeed();
+    renderAt("/animation");
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { level: 1, name: "Animation" })).toBeInTheDocument();
+    });
+    expect(
+      await screen.findByRole("heading", { name: "Anime[English Dubbed]" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Shonen Rising" })).toBeInTheDocument();
+  });
+
+  it("renders the most watched catalog at /most-watched", async () => {
+    mockHomeFeed();
+    renderAt("/most-watched");
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { level: 1, name: "Most Watched" })).toBeInTheDocument();
+    });
+    expect(await screen.findByRole("heading", { name: "Trending Now" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Popular Movies" })).toBeInTheDocument();
   });
 
   it("renders the empty my-list page at /my-list", () => {

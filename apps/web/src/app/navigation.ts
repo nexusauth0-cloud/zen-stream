@@ -11,13 +11,14 @@ export interface NavItem {
   icon: ZenIconName;
 }
 
-/** Header destinations (desktop inline nav + mobile bottom nav). */
+/** Header destinations (desktop inline nav). */
 export const PRIMARY_NAV: readonly NavItem[] = [
   { to: "/", label: "Home", icon: "home" },
   { to: "/movies", label: "Movies", icon: "film" },
   { to: "/series", label: "TV Series", icon: "tv" },
+  { to: "/animation", label: "Animation", icon: "sparkle" },
+  { to: "/most-watched", label: "Most Watched", icon: "flame" },
   { to: "/genres", label: "Genres", icon: "grid" },
-  { to: "/my-list", label: "My List", icon: "bookmark" },
 ];
 
 /** Mobile bottom navigation — the primary mobile destinations. */
@@ -34,6 +35,8 @@ export const FOOTER_NAV: readonly { label: string; to: string }[] = [
   { label: "Home", to: "/" },
   { label: "Movies", to: "/movies" },
   { label: "TV Series", to: "/series" },
+  { label: "Animation", to: "/animation" },
+  { label: "Most Watched", to: "/most-watched" },
   { label: "Genres", to: "/genres" },
   { label: "Search", to: "/search" },
   { label: "My List", to: "/my-list" },

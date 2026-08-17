@@ -4,6 +4,8 @@ import { WatchlistProvider } from "./store/watchlist";
 import { HomePage } from "./pages/HomePage";
 import { MoviesPage } from "./pages/MoviesPage";
 import { SeriesPage } from "./pages/SeriesPage";
+import { AnimationPage } from "./pages/AnimationPage";
+import { MostWatchedPage } from "./pages/MostWatchedPage";
 import { SearchPage } from "./pages/SearchPage";
 import { MyListPage } from "./pages/MyListPage";
 import { HistoryPage } from "./pages/HistoryPage";
@@ -21,6 +23,8 @@ import { NotFoundPage } from "./pages/NotFoundPage";
  * `/`               Discovery home (hero + API rails)
  * `/movies`         Movie browse
  * `/series`         Series browse
+ * `/animation`      Animation & anime collections
+ * `/most-watched`   Popularity collections (popular/trending)
  * `/search`         Search (URL-synced query)
  * `/movie/:id`      Movie details
  * `/series/:id`     Series details (seasons + episodes)
@@ -39,6 +43,8 @@ export function AppRoutes() {
         <Route path="/" element={<HomePage />} />
         <Route path="/movies" element={<MoviesPage />} />
         <Route path="/series" element={<SeriesPage />} />
+        <Route path="/animation" element={<AnimationPage />} />
+        <Route path="/most-watched" element={<MostWatchedPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/movie/:subjectId" element={<MoviePage />} />
         <Route path="/series/:subjectId" element={<SeriesDetailPage />} />

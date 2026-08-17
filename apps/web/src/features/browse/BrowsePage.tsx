@@ -4,22 +4,23 @@ import { MediaCard } from "../../components/media/MediaCard";
 import { MediaGrid } from "../../components/media/MediaGrid";
 import { SectionHeader } from "../../components/media/SectionHeader";
 import { useBrowseSubjects } from "./useBrowseSubjects";
+import type { FeedRowSelector } from "./useBrowseSubjects";
 import "./BrowsePage.css";
 
 export interface BrowsePageProps {
   title: string;
-  /** Catalog kind for the browse collection. */
-  kind: "movie" | "series";
+  /** Selects which real feed rows form this catalog. */
+  select: FeedRowSelector;
   emptyMessage: string;
 }
 
 /**
  * Streaming catalog page: page heading, count, then one grid section per
- * real feed row of the requested kind (Popular, Latest, More … whatever
- * the live feed provides). Loading and error states keep the structure.
+ * matching real feed row (Popular, Latest, Anime … whatever the live feed
+ * provides). Loading and error states keep the structure.
  */
-export function BrowsePage({ title, kind, emptyMessage }: BrowsePageProps) {
-  const { status, rows, total, error, retry } = useBrowseSubjects(kind);
+export function BrowsePage({ title, select, emptyMessage }: BrowsePageProps) {
+  const { status, rows, total, error, retry } = useBrowseSubjects(select);
 
   return (
     <section className="zs-browse">
@@ -32,7 +33,7 @@ export function BrowsePage({ title, kind, emptyMessage }: BrowsePageProps) {
 
       {status === "error" && (
         <ErrorState
-          title={`${title} are unavailable right now`}
+          title={`${title} unavailable right now`}
           message={error ?? undefined}
           onRetry={retry}
         />

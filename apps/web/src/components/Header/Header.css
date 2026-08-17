@@ -170,7 +170,10 @@
   .zs-header__nav {
     display: block;
   }
+}
 
+/* Six nav destinations need room before the search field appears. */
+@media (min-width: 1024px) {
   .zs-header__search {
     display: flex;
   }
