@@ -28,4 +28,18 @@ describe("mediaApiConfig", () => {
 
     expect(mediaApiConfig()).toBeNull();
   });
+
+  it("returns null when only the secret is set", () => {
+    process.env.MEDIA_API_SECRET = "hunter2";
+
+    expect(mediaApiConfig()).toBeNull();
+    expect(isMediaApiConfigured()).toBe(false);
+  });
+
+  it("ignores trailing slashes on the base url", () => {
+    process.env.MEDIA_API_BASE_URL = "https://media.example////";
+    process.env.MEDIA_API_SECRET = "hunter2";
+
+    expect(mediaApiConfig()?.baseUrl).toBe("https://media.example");
+  });
 });
