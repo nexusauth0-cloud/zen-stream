@@ -47,4 +47,11 @@
   .zs-bottom-nav__link--active .zs-bottom-nav__icon {
     color: var(--zs-color-accent);
   }
+
+  /* Tablet and desktop use the header navigation instead. */
+  @media (min-width: 768px) {
+    .zs-bottom-nav {
+      display: none;
+    }
+  }
 }
