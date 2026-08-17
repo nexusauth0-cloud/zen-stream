@@ -5,11 +5,13 @@ import type { AsyncState } from "../../api/hooks";
 
 export type FeedRowSelector = (row: MediaHomeRow) => boolean;
 
-/** Catalog rows that are whole-movie collections. */
-export const selectMovieRows: FeedRowSelector = (row) => row.type === "SUBJECTS_MOVIE";
+/** Catalog rows whose subjects are movies. */
+export const selectMovieRows: FeedRowSelector = (row) =>
+  row.subjects.some((subject) => subject.type === "movie");
 
-/** Catalog rows that are whole-series collections. */
-export const selectSeriesRows: FeedRowSelector = (row) => row.type === "SUBJECTS_TV";
+/** Catalog rows whose subjects are series. */
+export const selectSeriesRows: FeedRowSelector = (row) =>
+  row.subjects.some((subject) => subject.type === "series");
 
 /** Animation catalog: any feed collection about anime or animation. */
 export const selectAnimationRows: FeedRowSelector = (row) =>
@@ -35,9 +37,13 @@ export interface BrowseSubjectsState {
 
 /**
  * Browse catalog derived from the live home feed: every row the selector
- * matches becomes a section (e.g. "New Movies", "Nollywood Movie",
+ * matches becomes a section (e.g. "Popular Movie", "Nollywood Movie",
  * "Anime[English Dubbed]"), deduplicated by subject id across the page.
  * Real catalog data only — no fixtures.
+ *
+ * Rows are classified by their subjects' own type: the live worker types
+ * every content row as SUBJECTS_MOVIE regardless of what the row contains,
+ * so the per-subject type is the reliable signal.
  */
 export function useBrowseSubjects(select: FeedRowSelector): BrowseSubjectsState {
   const { status, data, error, retry } = useHomeFeed();
