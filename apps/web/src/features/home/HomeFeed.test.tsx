@@ -120,8 +120,9 @@ describe("HomeFeed", () => {
     vi.stubGlobal("fetch", vi.fn(() => new Promise(() => undefined)));
     renderHome();
 
-    expect(screen.getByRole("status", { name: "Loading featured" })).toBeInTheDocument();
-    expect(screen.getAllByRole("status", { name: "Loading feed" }).length).toBeGreaterThan(0);
+    expect(screen.getByRole("status", { name: "Loading featured content" })).toBeInTheDocument();
+    expect(screen.getAllByRole("status", { name: "Loading Popular Movies" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("status", { name: "Loading Popular Series" }).length).toBeGreaterThan(0);
   });
 
   it("renders the hero and one rail per row from real data", async () => {

@@ -12,6 +12,7 @@ import { MoviePage } from "./pages/MoviePage";
 import { SeriesDetailPage } from "./pages/SeriesDetailPage";
 import { WatchPage } from "./pages/WatchPage";
 import { CollectionPage } from "./pages/CollectionPage";
+import { GenresPage } from "./pages/GenresPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 
 /**
@@ -25,7 +26,8 @@ import { NotFoundPage } from "./pages/NotFoundPage";
  * `/series/:id`     Series details (seasons + episodes)
  * `/watch/:id`      Player
  * `/collection/:opId`  Single home-rail collection ("View all")
- * `/my-list`        Watchlist
+ * `/genres`        Genre & category collections
+ * `/my-list`       Watchlist
  * `/history`        History placeholder
  * `/account`        Account placeholder
  * `*`               Not found
@@ -42,6 +44,7 @@ export function AppRoutes() {
         <Route path="/series/:subjectId" element={<SeriesDetailPage />} />
         <Route path="/watch/:subjectId" element={<WatchPage />} />
         <Route path="/collection/:opId" element={<CollectionPage />} />
+        <Route path="/genres" element={<GenresPage />} />
         <Route path="/my-list" element={<MyListPage />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/account" element={<AccountPage />} />

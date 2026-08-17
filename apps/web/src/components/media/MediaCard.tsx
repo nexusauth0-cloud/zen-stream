@@ -3,8 +3,8 @@ import type { MediaSubjectSummary } from "@zen-stream/contracts";
 import { useWatchlist } from "../../store/watchlist";
 import { ZenIcon } from "../Icon/icons";
 import { MediaBadge } from "./MediaBadge";
-import { MediaMetadata, releaseYear } from "./MediaMetadata";
 import { RatingBadge } from "./RatingBadge";
+import { releaseYear } from "./MediaMetadata";
 import "./MediaCard.css";
 
 export interface MediaCardProps {
@@ -21,14 +21,17 @@ export function detailsRouteFor(item: Pick<MediaSubjectSummary, "subjectId" | "t
 
 /**
  * Catalog poster card. Real poster artwork when available, a quiet branded
- * fallback otherwise. Type and rating badges, plus a watchlist toggle that
- * must not navigate (stopPropagation is unnecessary — the toggle is a real
- * button beside the link, not nested inside it).
+ * fallback otherwise. Type and rating badges on the artwork, a compact
+ * "⭐ rating · year" meta line, and a watchlist toggle that must not
+ * navigate (stopPropagation is unnecessary — the toggle is a real button
+ * beside the link, not nested inside it).
  */
 export function MediaCard({ item, className, to }: MediaCardProps) {
   const { isSaved, toggle } = useWatchlist();
   const saved = isSaved(item.subjectId);
   const destination = to ?? detailsRouteFor(item);
+  const year = releaseYear(item.releaseDate);
+  const metaSegments = [item.rating, year].filter((value) => value !== null && value !== undefined);
 
   return (
     <article className={`zs-media-card${className ? ` ${className}` : ""}`}>
@@ -54,11 +57,14 @@ export function MediaCard({ item, className, to }: MediaCardProps) {
         </div>
         <div className="zs-media-card__body">
           <span className="zs-media-card__title">{item.title}</span>
-          <MediaMetadata
-            year={releaseYear(item.releaseDate)}
-            genre={item.genre}
-            className="zs-media-card__meta"
-          />
+          {metaSegments.length > 0 && (
+            <span className="zs-media-card__meta">
+              {item.rating !== null && item.rating !== undefined && (
+                <ZenIcon name="star" size={12} className="zs-media-card__meta-star" />
+              )}
+              {metaSegments.join(" · ")}
+            </span>
+          )}
         </div>
       </Link>
       <button

@@ -16,6 +16,7 @@ export const PRIMARY_NAV: readonly NavItem[] = [
   { to: "/", label: "Home", icon: "home" },
   { to: "/movies", label: "Movies", icon: "film" },
   { to: "/series", label: "TV Series", icon: "tv" },
+  { to: "/genres", label: "Genres", icon: "grid" },
   { to: "/my-list", label: "My List", icon: "bookmark" },
 ];
 
@@ -33,6 +34,7 @@ export const FOOTER_NAV: readonly { label: string; to: string }[] = [
   { label: "Home", to: "/" },
   { label: "Movies", to: "/movies" },
   { label: "TV Series", to: "/series" },
+  { label: "Genres", to: "/genres" },
   { label: "Search", to: "/search" },
   { label: "My List", to: "/my-list" },
 ];

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMediaInfo, useSeason } from "../api/hooks";
 import { DetailsHero } from "../components/media/DetailsHero";
+import { RelatedRail } from "../components/media/RelatedRail";
 import { EmptyState, ErrorState } from "../components/feedback/States";
 import { SkeletonGrid } from "../components/feedback/LoadingSkeleton";
 import { ZenIcon } from "../components/Icon/icons";
@@ -81,6 +82,8 @@ export function SeriesDetailPage() {
           )}
         </div>
       </div>
+
+      <RelatedRail subjectId={info.data.subjectId} kind="series" />
 
       <section className="zs-series-details__episodes" aria-labelledby="zs-series-episodes-title">
         <div className="zs-series-details__episodes-head">

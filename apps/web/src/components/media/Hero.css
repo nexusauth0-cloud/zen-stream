@@ -1,7 +1,7 @@
 .zs-hero {
   position: relative;
   isolation: isolate;
-  min-height: clamp(16rem, 45vh, 26rem);
+  min-height: clamp(14rem, 38vh, 22rem);
   display: flex;
   align-items: flex-end;
   margin-inline: calc(50% - 50vw);
@@ -48,7 +48,7 @@
   width: 100%;
   max-width: var(--zs-container-max);
   margin-inline: auto;
-  padding: var(--zs-space-6) var(--zs-space-4) var(--zs-space-6);
+  padding: var(--zs-space-4) var(--zs-space-4) var(--zs-space-5);
 }
 
 .zs-hero__badges {
@@ -89,7 +89,7 @@
 
 @media (min-width: 768px) {
   .zs-hero {
-    min-height: clamp(18rem, 50vh, 30rem);
+    min-height: clamp(16rem, 44vh, 26rem);
   }
 
   .zs-hero__content {

@@ -7,7 +7,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--zs-space-3);
-  margin-bottom: var(--zs-space-5);
+  margin-bottom: var(--zs-space-4);
 }
 
 .zs-browse__title {
@@ -19,4 +19,14 @@
   color: var(--zs-color-text-muted);
   font-size: var(--zs-text-sm);
   white-space: nowrap;
+}
+
+.zs-browse__sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--zs-space-6);
+}
+
+.zs-browse__section {
+  min-width: 0;
 }

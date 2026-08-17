@@ -65,7 +65,7 @@
 
 .zs-media-card__title {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
   font-size: var(--zs-text-sm);
@@ -76,11 +76,20 @@
 
 .zs-media-card__meta {
   margin-top: 0.125rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 100%;
   overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-size: var(--zs-text-xs);
+  color: var(--zs-color-text-secondary);
+}
+
+.zs-media-card__meta-star {
+  color: var(--zs-color-accent);
+  flex-shrink: 0;
 }
 
 .zs-media-card__save {

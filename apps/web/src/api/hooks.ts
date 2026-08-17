@@ -100,9 +100,11 @@ export interface UseSearchOptions {
 }
 
 export function useSearch({ keyword, page = 1 }: UseSearchOptions) {
+  const hasKeyword = keyword.trim().length > 0;
   return useAsyncData<MediaSearchResponse>(
     (signal) => searchMedia({ keyword, page, perPage: 20 }, signal),
     [keyword, page],
+    hasKeyword,
   );
 }
 

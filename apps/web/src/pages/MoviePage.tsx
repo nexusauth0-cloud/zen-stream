@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useMediaInfo } from "../api/hooks";
 import { DetailsHero } from "../components/media/DetailsHero";
+import { RelatedRail } from "../components/media/RelatedRail";
 import { EmptyState, ErrorState } from "../components/feedback/States";
 import { SkeletonGrid } from "../components/feedback/LoadingSkeleton";
 import { ZenIcon } from "../components/Icon/icons";
@@ -71,6 +72,7 @@ export function MoviePage() {
           )}
         </div>
       </div>
+      <RelatedRail subjectId={data.subjectId} kind="movie" />
     </section>
   );
 }

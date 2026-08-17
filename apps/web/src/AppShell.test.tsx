@@ -38,7 +38,7 @@ describe("AppShell", () => {
     const targets = within(nav)
       .getAllByRole("link")
       .map((link) => link.getAttribute("href"));
-    expect(targets).toEqual(["/", "/movies", "/series", "/my-list"]);
+    expect(targets).toEqual(["/", "/movies", "/series", "/genres", "/my-list"]);
   });
 
   it("renders the brand as a link home", () => {
@@ -56,7 +56,7 @@ describe("AppShell", () => {
     await user.type(searchbox, "avatar");
     await user.click(screen.getByRole("button", { name: "Search movies and TV shows" }));
 
-    expect(await screen.findByRole("heading", { name: "Search" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Search movies and TV shows" })).toBeInTheDocument();
     expect(screen.getByRole("searchbox", { name: "Search movies and TV shows" })).toHaveValue(
       "avatar",
     );
@@ -80,7 +80,7 @@ describe("AppShell", () => {
     const targets = within(footerNav)
       .getAllByRole("link")
       .map((link) => link.getAttribute("href"));
-    expect(targets).toEqual(["/", "/movies", "/series", "/search", "/my-list"]);
+    expect(targets).toEqual(["/", "/movies", "/series", "/genres", "/search", "/my-list"]);
   });
 });
 

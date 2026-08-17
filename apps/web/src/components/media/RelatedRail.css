@@ -1,0 +1,6 @@
+.zs-related {
+  margin-top: var(--zs-space-6);
+  padding-top: var(--zs-space-5);
+  border-top: 1px solid var(--zs-color-border);
+  min-width: 0;
+}

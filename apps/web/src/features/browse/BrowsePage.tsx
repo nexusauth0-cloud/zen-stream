@@ -2,6 +2,7 @@ import { EmptyState, ErrorState } from "../../components/feedback/States";
 import { SkeletonGrid } from "../../components/feedback/LoadingSkeleton";
 import { MediaCard } from "../../components/media/MediaCard";
 import { MediaGrid } from "../../components/media/MediaGrid";
+import { SectionHeader } from "../../components/media/SectionHeader";
 import { useBrowseSubjects } from "./useBrowseSubjects";
 import "./BrowsePage.css";
 
@@ -13,11 +14,12 @@ export interface BrowsePageProps {
 }
 
 /**
- * Streaming browse page: page heading, count, and a responsive grid of
- * real catalog subjects with loading / empty / error states.
+ * Streaming catalog page: page heading, count, then one grid section per
+ * real feed row of the requested kind (Popular, Latest, More … whatever
+ * the live feed provides). Loading and error states keep the structure.
  */
 export function BrowsePage({ title, kind, emptyMessage }: BrowsePageProps) {
-  const { status, subjects, total, error, retry } = useBrowseSubjects(kind);
+  const { status, rows, total, error, retry } = useBrowseSubjects(kind);
 
   return (
     <section className="zs-browse">
@@ -36,16 +38,23 @@ export function BrowsePage({ title, kind, emptyMessage }: BrowsePageProps) {
         />
       )}
 
-      {status === "success" && subjects.length === 0 && (
+      {status === "success" && rows.length === 0 && (
         <EmptyState title="Nothing here yet" message={emptyMessage} />
       )}
 
-      {status === "success" && subjects.length > 0 && (
-        <MediaGrid>
-          {subjects.map((subject) => (
-            <MediaCard key={subject.subjectId} item={subject} />
+      {status === "success" && rows.length > 0 && (
+        <div className="zs-browse__sections">
+          {rows.map((row) => (
+            <section key={row.title} className="zs-browse__section" aria-label={row.title}>
+              <SectionHeader title={row.title} />
+              <MediaGrid>
+                {row.subjects.map((subject) => (
+                  <MediaCard key={subject.subjectId} item={subject} />
+                ))}
+              </MediaGrid>
+            </section>
           ))}
-        </MediaGrid>
+        </div>
       )}
     </section>
   );

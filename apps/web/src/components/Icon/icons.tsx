@@ -29,7 +29,8 @@ export type ZenIconName =
   | "check"
   | "plus"
   | "info"
-  | "image";
+  | "image"
+  | "grid";
 
 export const ZEN_ICON_PATHS: Record<ZenIconName, ReactNode> = {
   home: (
@@ -105,6 +106,14 @@ export const ZEN_ICON_PATHS: Record<ZenIconName, ReactNode> = {
       <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
       <circle cx="9" cy="9.5" r="1.6" />
       <path d="m4.5 17.5 5-4.5 3.5 3 3-2.5 3.5 4" />
+    </>
+  ),
+  grid: (
+    <>
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
     </>
   ),
 };

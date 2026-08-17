@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { MediaSearchItem, MediaSubjectSummary } from "@zen-stream/contracts";
-import { useSearch } from "../api/hooks";
+import { useHomeFeed, useSearch } from "../api/hooks";
 import { EmptyState, ErrorState } from "../components/feedback/States";
-import { SkeletonGrid } from "../components/feedback/LoadingSkeleton";
+import { SkeletonGrid, SkeletonRail } from "../components/feedback/LoadingSkeleton";
 import { MediaCard } from "../components/media/MediaCard";
 import { MediaGrid } from "../components/media/MediaGrid";
+import { MediaRail } from "../components/media/MediaRail";
+import { SectionHeader } from "../components/media/SectionHeader";
 import { ZenIcon } from "../components/Icon/icons";
 import "./SearchPage.css";
 
@@ -63,6 +65,7 @@ export function SearchPage() {
 
   const enabled = query.length > 0;
   const { status, data, error, retry } = useSearch({ keyword: query, page: pages });
+  const suggestions = useHomeFeed();
 
   useEffect(() => {
     if (status === "success" && data) {
@@ -71,15 +74,26 @@ export function SearchPage() {
     }
   }, [status, data, pages]);
 
-  const hasMore = useMemo(() => data?.pager.hasMore ?? false, [data]);
-  const totalCount = data?.pager.totalCount ?? accumulated.length;
+  const hasMore = useMemo(() => data?.pager?.hasMore ?? false, [data]);
+  const totalCount = data?.pager?.totalCount ?? accumulated.length;
 
   const handleLoadMore = () => setPages((value) => value + 1);
+
+  /** First movie row and first series row of the live feed, for idle browsing. */
+  const suggestionRows = useMemo(() => {
+    if (!suggestions.data) return [];
+    const movieRow = suggestions.data.rows.find((row) => row.type === "SUBJECTS_MOVIE");
+    const seriesRow = suggestions.data.rows.find((row) => row.type === "SUBJECTS_TV");
+    return [
+      movieRow ? { title: "Popular movies", row: movieRow } : null,
+      seriesRow ? { title: "Popular series", row: seriesRow } : null,
+    ].filter((entry): entry is { title: string; row: (typeof movieRow) & object } => entry !== null && entry.row !== undefined);
+  }, [suggestions.data]);
 
   return (
     <section className="zs-search">
       <header className="zs-search__head">
-        <h1 className="zs-search__title">Search</h1>
+        <h1 className="zs-search__title">Search movies and TV shows</h1>
       </header>
 
       <div className="zs-search__field">
@@ -95,8 +109,36 @@ export function SearchPage() {
         />
       </div>
 
-      {!enabled && (
+      {!enabled && suggestions.status === "loading" && (
+        <div className="zs-search__suggestions">
+          <SectionHeader title="Popular right now" />
+          <SkeletonRail label="Loading popular titles" count={8} />
+        </div>
+      )}
+
+      {!enabled && suggestions.status === "success" && suggestionRows.length > 0 && (
+        <div className="zs-search__suggestions">
+          {suggestionRows.map(({ title, row }) => (
+            <section key={row.opId} className="zs-search__suggestion" aria-label={title}>
+              <SectionHeader title={title} />
+              <MediaRail title={title}>
+                {row.subjects.slice(0, 12).map((subject) => (
+                  <MediaCard key={subject.subjectId} item={subject} className="zs-media-rail__card" />
+                ))}
+              </MediaRail>
+            </section>
+          ))}
+        </div>
+      )}
+
+      {!enabled && suggestions.status === "success" && suggestionRows.length === 0 && (
         <p className="zs-search__hint">Type a title to search the catalog.</p>
+      )}
+
+      {!enabled && suggestions.status === "error" && (
+        <p className="zs-search__hint">
+          Type a title to search the catalog. Popular picks are unavailable right now.
+        </p>
       )}
 
       {enabled && status === "loading" && <SkeletonGrid label={`Searching for ${query}`} />}
@@ -114,9 +156,12 @@ export function SearchPage() {
 
       {enabled && status === "success" && accumulated.length > 0 && (
         <>
-          <p className="zs-search__count">
-            {totalCount} {totalCount === 1 ? "result" : "results"} for “{query}”
-          </p>
+          <div className="zs-search__results-head">
+            <h2 className="zs-search__results-title">Results for “{query}”</h2>
+            <p className="zs-search__count">
+              {totalCount} {totalCount === 1 ? "result" : "results"}
+            </p>
+          </div>
           <MediaGrid>
             {accumulated.map((item) => (
               <MediaCard key={item.subjectId} item={asSummary(item)} />

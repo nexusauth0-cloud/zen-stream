@@ -91,7 +91,7 @@ describe("MediaCard", () => {
     );
 
     expect(screen.getByRole("link", { name: "Harbor Lights" })).toHaveAttribute("href", "/movie/123");
-    expect(screen.getByText("2023 · Crime")).toBeInTheDocument();
+    expect(screen.getByText("7.4 · 2023")).toBeInTheDocument();
   });
 
   it("uses the real poster when present", () => {

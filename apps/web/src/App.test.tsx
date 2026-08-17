@@ -172,8 +172,34 @@ describe("routing", () => {
   it("renders the search page at /search", () => {
     renderAt("/search");
 
-    expect(screen.getByRole("heading", { level: 1, name: "Search" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Search movies and TV shows" })).toBeInTheDocument();
     expect(screen.getByRole("searchbox", { name: "Search the catalog" })).toBeInTheDocument();
+  });
+
+  it("shows real popular rails on the search page before a query", async () => {
+    mockHomeFeed();
+    renderAt("/search");
+
+    expect(
+      await screen.findByRole("heading", { name: "Popular movies" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Popular series" })).toBeInTheDocument();
+  });
+
+  it("renders the genres page with real categories at /genres", async () => {
+    mockHomeFeed();
+    renderAt("/genres");
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Genres & Categories" }),
+    ).toBeInTheDocument();
+    const main = screen.getByRole("main");
+    const links = within(main).getAllByRole("link");
+    expect(links.map((link) => link.getAttribute("href"))).toEqual([
+      "/collection/op-trending",
+      "/collection/op-movies",
+      "/collection/op-series",
+    ]);
   });
 
   it("renders the empty my-list page at /my-list", () => {
