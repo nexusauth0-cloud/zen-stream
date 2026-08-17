@@ -1,7 +1,7 @@
 .zs-details-hero {
   position: relative;
   isolation: isolate;
-  min-height: clamp(14rem, 38vh, 24rem);
+  min-height: clamp(13rem, 32vh, 19rem);
   display: flex;
   align-items: flex-end;
   margin-inline: calc(50% - 50vw);
@@ -48,7 +48,7 @@
   width: 100%;
   max-width: var(--zs-container-max);
   margin-inline: auto;
-  padding: var(--zs-space-6) var(--zs-space-4) var(--zs-space-6);
+  padding: var(--zs-space-4) var(--zs-container-gutter) var(--zs-space-4);
 }
 
 .zs-details-hero__badges {
@@ -58,7 +58,7 @@
 }
 
 .zs-details-hero__title {
-  font-size: var(--zs-text-display);
+  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
   font-weight: var(--zs-weight-bold);
   max-width: 26ch;
 }
@@ -95,10 +95,10 @@
 
 @media (min-width: 768px) {
   .zs-details-hero {
-    min-height: clamp(16rem, 44vh, 28rem);
+    min-height: clamp(14.5rem, 34vh, 21rem);
   }
 
   .zs-details-hero__content {
-    padding-inline: var(--zs-space-6);
+    padding-inline: var(--zs-container-gutter);
   }
 }

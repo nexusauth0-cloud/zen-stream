@@ -3,9 +3,9 @@
 }
 
 .zs-details__hero-skeleton {
-  height: clamp(14rem, 38vh, 24rem);
+  height: clamp(13rem, 32vh, 19rem);
   margin-inline: calc(50% - 50vw);
-  margin-bottom: var(--zs-space-6);
+  margin-bottom: var(--zs-space-5);
   background: linear-gradient(
     100deg,
     var(--zs-color-surface) 40%,
@@ -20,12 +20,12 @@
 .zs-details__content {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--zs-space-5);
-  padding-top: var(--zs-space-5);
+  gap: var(--zs-space-4);
+  padding-top: var(--zs-space-4);
 }
 
 .zs-details__poster {
-  max-width: 240px;
+  max-width: 200px;
 }
 
 .zs-details__poster-image {
@@ -48,7 +48,7 @@
 }
 
 .zs-details__heading {
-  font-size: var(--zs-text-xl);
+  font-size: var(--zs-text-lg);
   font-weight: var(--zs-weight-bold);
   margin-bottom: var(--zs-space-2);
 }
@@ -85,8 +85,8 @@
 
 @media (min-width: 768px) {
   .zs-details__content {
-    grid-template-columns: 220px minmax(0, 1fr);
-    gap: var(--zs-space-6);
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: var(--zs-space-5);
   }
 }
 

@@ -32,7 +32,10 @@ export function CollectionPage() {
       )}
 
       {status === "success" && data && data.subjects.length === 0 && (
-        <EmptyState title="Nothing here yet" message="This collection is empty. Check back soon." />
+        <EmptyState
+          title="No titles available in this collection yet."
+          message="This category will fill up as the catalog grows. Check back soon."
+        />
       )}
 
       {status === "success" && data && data.subjects.length > 0 && (
