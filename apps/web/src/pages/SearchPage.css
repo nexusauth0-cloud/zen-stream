@@ -3,11 +3,11 @@
 }
 
 .zs-search__head {
-  margin-bottom: var(--zs-space-4);
+  margin-bottom: var(--zs-space-3);
 }
 
 .zs-search__title {
-  font-size: var(--zs-text-3xl);
+  font-size: clamp(1.75rem, 2.5vw, 2rem);
   font-weight: var(--zs-weight-bold);
 }
 

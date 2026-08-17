@@ -7,11 +7,11 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--zs-space-3);
-  margin-bottom: var(--zs-space-4);
+  margin-bottom: var(--zs-space-3);
 }
 
 .zs-browse__title {
-  font-size: var(--zs-text-3xl);
+  font-size: clamp(1.75rem, 2.5vw, 2rem);
   font-weight: var(--zs-weight-bold);
 }
 
@@ -24,7 +24,7 @@
 .zs-browse__sections {
   display: flex;
   flex-direction: column;
-  gap: var(--zs-space-6);
+  gap: var(--zs-space-5);
 }
 
 .zs-browse__section {

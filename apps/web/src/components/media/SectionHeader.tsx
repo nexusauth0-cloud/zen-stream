@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ZenIcon } from "../Icon/icons";
 import "./SectionHeader.css";
 
 export interface SectionHeaderProps {
@@ -21,6 +22,7 @@ export function SectionHeader({ title, subtitle, action, className }: SectionHea
       {action && (
         <Link className="zs-section-header__action" to={action.to}>
           {action.label}
+          <ZenIcon name="chevron-right" size={14} />
         </Link>
       )}
     </div>
