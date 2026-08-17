@@ -77,11 +77,26 @@
 
     /* Layout */
     --zs-target-min: 44px;
-    --zs-container-max: 1440px;
+    /* Fluid streaming canvas: full-width below 1920px, capped there so
+       ultra-wide displays keep intentional side gutters. */
+    --zs-container-max: 1920px;
+    --zs-container-gutter: 1rem;
     --zs-container-narrow: 920px;
     --zs-breakpoint-sm: 480px;
     --zs-breakpoint-md: 768px;
     --zs-breakpoint-lg: 1024px;
     --zs-breakpoint-xl: 1280px;
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --zs-container-gutter: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1600px) {
+    :root {
+      --zs-container-gutter: 2.5rem;
+    }
   }
 }

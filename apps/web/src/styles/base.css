@@ -11,6 +11,11 @@
 
   html {
     -webkit-text-size-adjust: 100%;
+    /* Full-bleed heroes use `calc(50% - 50vw)` which overflows by the
+       classic scrollbar width on desktop; clip makes the page never
+       scroll horizontally (rails scroll internally) and keeps the
+       cinematic edge-to-edge surfaces jank-free. */
+    overflow-x: clip;
   }
 
   body {
@@ -22,6 +27,7 @@
     line-height: var(--zs-leading-normal);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    overflow-x: clip;
   }
 
   button,
