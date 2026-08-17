@@ -89,11 +89,10 @@ export function WatchPage() {
               type="button"
               className="zs-player__retry"
               onClick={() => {
-                const video = videoRef.current;
-                if (video) {
-                  setPlayerStatus("loading");
-                  video.load();
-                }
+                // Stream URLs are short-lived signed links; retrying must
+                // fetch a fresh stream rather than reload the expired one.
+                setPlayerStatus("loading");
+                retry();
               }}
             >
               Try again
