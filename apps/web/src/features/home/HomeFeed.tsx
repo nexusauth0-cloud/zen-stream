@@ -19,10 +19,16 @@ export function heroSubject(feed: MediaHomeFeed): MediaSubjectSummary | null {
   return feed.rows[0]?.subjects[0] ?? null;
 }
 
-/** Maps a home row to a real "See all" destination. */
+/**
+ * Maps a home row to a real "See all" destination. The live worker types
+ * every content row as SUBJECTS_MOVIE, so the destination follows the
+ * subjects' own types: series-only rows go to /series, movie-only rows to
+ * /movies, and mixed or unusual rows to their full collection.
+ */
 function browseActionFor(row: MediaHomeFeed["rows"][number]): { label: string; to: string } {
-  if (row.type === "SUBJECTS_MOVIE") return { label: "See all movies", to: "/movies" };
-  if (row.type === "SUBJECTS_TV") return { label: "See all series", to: "/series" };
+  const kinds = new Set(row.subjects.map((subject) => subject.type));
+  if (kinds.size === 1 && kinds.has("series")) return { label: "See all series", to: "/series" };
+  if (kinds.size === 1 && kinds.has("movie")) return { label: "See all movies", to: "/movies" };
   return { label: "View all", to: `/collection/${row.opId}` };
 }
 
@@ -75,7 +81,11 @@ export function HomeFeed() {
 
   const hero = heroSubject(data);
 
-  if (data.rows.length === 0) {
+  // The live feed includes structural rows (banners, filters, empty
+  // custom collections) that carry no subjects — never show an empty rail.
+  const contentRows = data.rows.filter((row) => row.subjects.length > 0);
+
+  if (contentRows.length === 0) {
     return (
       <EmptyState
         title="Nothing to discover yet"
@@ -92,7 +102,7 @@ export function HomeFeed() {
         </div>
       )}
       <div className="zs-home-feed__sections">
-        {data.rows.map((row) => (
+        {contentRows.map((row) => (
           <section key={row.opId} className="zs-home-feed__section" aria-label={row.title}>
             <SectionHeader title={row.title} action={browseActionFor(row)} />
             <MediaRail title={row.title}>

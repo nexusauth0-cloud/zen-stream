@@ -7,7 +7,7 @@ import { HomeFeed, heroSubject } from "./HomeFeed";
 
 function feed(): MediaHomeFeed {
   return {
-    total: 2,
+    total: 3,
     rows: [
       {
         title: "Nollywood Movie",
@@ -52,6 +52,14 @@ function feed(): MediaHomeFeed {
             country: null,
           },
         ],
+      },
+      {
+        // Structural row without subjects — must never render an empty rail.
+        title: "Classic Anime",
+        opId: "op-3",
+        type: "CUSTOM",
+        total: 0,
+        subjects: [],
       },
     ],
   };
@@ -135,6 +143,25 @@ describe("HomeFeed", () => {
     expect(screen.getByRole("heading", { name: "Nollywood Movie" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Anime[English Dubbed]" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "See all movies" })).toHaveAttribute("href", "/movies");
+    expect(screen.getByRole("link", { name: "See all series" })).toHaveAttribute("href", "/series");
+    expect(screen.queryByRole("heading", { name: "Classic Anime" })).not.toBeInTheDocument();
+  });
+
+  it("shows an empty state when every row is empty", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse({
+          total: 1,
+          rows: [{ title: "Classic Anime", opId: "op-3", type: "CUSTOM", total: 0, subjects: [] }],
+        }),
+      ),
+    );
+    renderHome();
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Nothing to discover yet" })).toBeInTheDocument();
+    });
   });
 
   it("shows an error state with retry on failure", async () => {

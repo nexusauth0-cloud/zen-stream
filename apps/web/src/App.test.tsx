@@ -5,7 +5,7 @@ import { AppRoutes } from "./App";
 import { WatchlistProvider } from "./store/watchlist";
 
 const HOME_FEED_BODY = {
-  total: 4,
+  total: 5,
   rows: [
     {
       title: "Trending Now",
@@ -95,6 +95,13 @@ const HOME_FEED_BODY = {
         },
       ],
     },
+    {
+      title: "Empty Banner Row",
+      opId: "op-empty",
+      type: "CUSTOM",
+      total: 0,
+      subjects: [],
+    },
   ],
 };
 
@@ -168,6 +175,7 @@ describe("routing", () => {
       expect(screen.getByRole("heading", { level: 1, name: "Harbor Lights" })).toBeInTheDocument();
     });
     expect(screen.getByRole("heading", { name: "Trending Now" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Empty Banner Row" })).not.toBeInTheDocument();
     expect(screen.queryByTestId("placeholder-page")).not.toBeInTheDocument();
   });
 
@@ -179,6 +187,9 @@ describe("routing", () => {
       expect(screen.getByRole("heading", { level: 1, name: "Movies" })).toBeInTheDocument();
     });
     expect(await screen.findByRole("link", { name: "Midnight Express" })).toBeInTheDocument();
+    // Series-only rows are excluded from the movie catalog.
+    expect(screen.queryByRole("heading", { name: "New Series" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Anime[English Dubbed]" })).not.toBeInTheDocument();
   });
 
   it("renders the series browse page at /series", async () => {
@@ -189,6 +200,9 @@ describe("routing", () => {
       expect(screen.getByRole("heading", { level: 1, name: "TV Series" })).toBeInTheDocument();
     });
     expect(await screen.findByRole("link", { name: "Night Shift" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Anime[English Dubbed]" })).toBeInTheDocument();
+    // Movie-only rows are excluded from the series catalog.
+    expect(screen.queryByRole("heading", { name: "Popular Movies" })).not.toBeInTheDocument();
   });
 
   it("renders the search page at /search", () => {

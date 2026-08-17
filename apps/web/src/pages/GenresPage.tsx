@@ -13,6 +13,10 @@ import "./GenresPage.css";
 export function GenresPage() {
   const { status, data, error, retry } = useHomeFeed();
 
+  // Structural rows (banners, empty custom collections) carry no subjects
+  // and are not browsable categories.
+  const contentRows = data?.rows.filter((row) => row.subjects.length > 0) ?? [];
+
   return (
     <section className="zs-genres">
       <header className="zs-genres__head">
@@ -30,19 +34,19 @@ export function GenresPage() {
         />
       )}
 
-      {status === "success" && data && data.rows.length === 0 && (
-        <EmptyState title="No categories yet" message="The catalog feed is empty right now." />
+      {status === "success" && contentRows.length === 0 && (
+        <EmptyState title="No categories yet" message="The catalog feed has no content right now." />
       )}
 
-      {status === "success" && data && data.rows.length > 0 && (
+      {status === "success" && contentRows.length > 0 && (
         <ul className="zs-genres__list">
-          {data.rows.map((row) => (
+          {contentRows.map((row) => (
             <li key={row.opId}>
               <Link to={`/collection/${row.opId}`} className="zs-genres__card">
                 <span className="zs-genres__card-body">
                   <span className="zs-genres__card-title">{row.title}</span>
                   <span className="zs-genres__card-count">
-                    {row.total} {row.total === 1 ? "title" : "titles"}
+                    {row.subjects.length} {row.subjects.length === 1 ? "title" : "titles"}
                   </span>
                 </span>
                 <ZenIcon name="chevron-right" size={18} className="zs-genres__card-arrow" />
