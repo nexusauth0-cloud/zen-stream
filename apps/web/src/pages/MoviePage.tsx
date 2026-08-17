@@ -62,8 +62,8 @@ export function MoviePage() {
           </p>
           {data.staff.length > 0 && (
             <ul className="zs-details__staff">
-              {data.staff.map((member) => (
-                <li key={`${member.role}-${member.name}`} className="zs-details__staff-member">
+              {data.staff.map((member, index) => (
+                <li key={`${index}-${member.role}-${member.name}`} className="zs-details__staff-member">
                   <span className="zs-details__staff-name">{member.name}</span>
                   <span className="zs-details__staff-role">{member.role}</span>
                 </li>

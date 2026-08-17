@@ -72,8 +72,8 @@ export function SeriesDetailPage() {
           </p>
           {info.data.staff.length > 0 && (
             <ul className="zs-series-details__staff">
-              {info.data.staff.map((member) => (
-                <li key={`${member.role}-${member.name}`} className="zs-series-details__staff-member">
+              {info.data.staff.map((member, index) => (
+                <li key={`${index}-${member.role}-${member.name}`} className="zs-series-details__staff-member">
                   <span className="zs-series-details__staff-name">{member.name}</span>
                   <span className="zs-series-details__staff-role">{member.role}</span>
                 </li>
