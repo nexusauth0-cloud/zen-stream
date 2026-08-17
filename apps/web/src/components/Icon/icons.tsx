@@ -32,7 +32,8 @@ export type ZenIconName =
   | "image"
   | "grid"
   | "sparkle"
-  | "flame";
+  | "flame"
+  | "download";
 
 export const ZEN_ICON_PATHS: Record<ZenIconName, ReactNode> = {
   home: (
@@ -123,6 +124,13 @@ export const ZEN_ICON_PATHS: Record<ZenIconName, ReactNode> = {
   ),
   flame: (
     <path d="M12 3.5c1.4 2.5 4.4 4 4.4 7.4a4.4 4.4 0 0 1-8.8 0c0-1.6.7-2.9 1.5-4.1.4 1.1 1.1 1.9 2 2.3-.3-2.4-.1-4.3 1.7-5.6z" />
+  ),
+  download: (
+    <>
+      <path d="M12 4v10" />
+      <path d="m7.5 10.5 4.5 4.5 4.5-4.5" />
+      <path d="M4.5 16.5v2a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-2" />
+    </>
   ),
 };
 

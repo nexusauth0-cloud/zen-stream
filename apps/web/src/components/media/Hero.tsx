@@ -12,6 +12,11 @@ export interface HeroProps {
   item: MediaSubjectSummary;
   /** Label of the primary play action; defaults to "Watch". */
   watchLabel?: string;
+  /**
+   * id for the title heading. Omit when the hero is one of several slides
+   * so hidden slides never produce duplicate ids.
+   */
+  titleId?: string;
 }
 
 /**
@@ -19,9 +24,9 @@ export interface HeroProps {
  * surface with copy overlaid lower-left. Poster artwork is used as the
  * backdrop when present; otherwise a branded gradient fallback.
  */
-export function Hero({ item, watchLabel = "Watch" }: HeroProps) {
+export function Hero({ item, watchLabel = "Watch", titleId }: HeroProps) {
   return (
-    <section className="zs-hero" aria-labelledby="zs-hero-title">
+    <section className="zs-hero" aria-labelledby={titleId}>
       <div className="zs-hero__backdrop" aria-hidden="true">
         {item.poster ? (
           <img className="zs-hero__backdrop-image" src={item.poster} alt="" />
@@ -36,7 +41,7 @@ export function Hero({ item, watchLabel = "Watch" }: HeroProps) {
           <MediaBadge type={item.type} />
           <RatingBadge rating={item.rating} />
         </div>
-        <h1 id="zs-hero-title" className="zs-hero__title">
+        <h1 id={titleId} className="zs-hero__title">
           {item.title}
         </h1>
         <MediaMetadata

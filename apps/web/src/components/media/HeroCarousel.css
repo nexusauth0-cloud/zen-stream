@@ -1,0 +1,93 @@
+.zs-hero-carousel {
+  position: relative;
+  margin-inline: calc(50% - 50vw);
+}
+
+.zs-hero-carousel__slide {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--zs-duration-slow) var(--zs-ease-out),
+    visibility 0s linear var(--zs-duration-slow);
+}
+
+.zs-hero-carousel__slide--active {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--zs-duration-slow) var(--zs-ease-out);
+}
+
+.zs-hero-carousel .zs-hero {
+  margin-inline: 0;
+}
+
+.zs-hero-carousel__arrows {
+  display: none;
+}
+
+.zs-hero-carousel__dots {
+  position: absolute;
+  right: var(--zs-container-gutter);
+  bottom: var(--zs-space-3);
+  display: flex;
+  gap: var(--zs-space-2);
+  padding: var(--zs-space-1) var(--zs-space-2);
+  border-radius: var(--zs-radius-pill);
+  background: rgb(11 11 13 / 0.45);
+  backdrop-filter: blur(6px);
+}
+
+.zs-hero-carousel__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--zs-radius-pill);
+  background: rgb(245 242 235 / 0.35);
+  transition:
+    width var(--zs-duration-fast) var(--zs-ease-out),
+    background-color var(--zs-duration-fast) var(--zs-ease-out);
+}
+
+.zs-hero-carousel__dot:hover {
+  background: rgb(245 242 235 / 0.7);
+}
+
+.zs-hero-carousel__dot--active {
+  width: 1.25rem;
+  background: var(--zs-color-accent);
+}
+
+@media (min-width: 768px) {
+  .zs-hero-carousel__arrows {
+    display: flex;
+    gap: var(--zs-space-2);
+    position: absolute;
+    right: var(--zs-container-gutter);
+    bottom: var(--zs-space-4);
+  }
+
+  .zs-hero-carousel__dots {
+    right: auto;
+    left: var(--zs-container-gutter);
+    bottom: var(--zs-space-5);
+  }
+
+  .zs-hero-carousel__arrow {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--zs-radius-pill);
+    color: var(--zs-color-text);
+    background: rgb(11 11 13 / 0.45);
+    border: 1px solid rgb(255 255 255 / 0.18);
+    backdrop-filter: blur(6px);
+    transition:
+      background-color var(--zs-duration-fast) var(--zs-ease-out),
+      color var(--zs-duration-fast) var(--zs-ease-out);
+  }
+
+  .zs-hero-carousel__arrow:hover {
+    background: rgb(35 35 41 / 0.85);
+    color: var(--zs-color-primary);
+  }
+}

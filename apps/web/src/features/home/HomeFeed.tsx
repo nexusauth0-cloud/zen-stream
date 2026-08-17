@@ -1,12 +1,17 @@
 import type { MediaHomeFeed, MediaSubjectSummary } from "@zen-stream/contracts";
+import { useMemo, useState } from "react";
 import { useHomeFeed } from "../../api/hooks";
 import { ErrorState, EmptyState } from "../../components/feedback/States";
 import { SkeletonRail } from "../../components/feedback/LoadingSkeleton";
 import { Hero } from "../../components/media/Hero";
+import { HeroCarousel } from "../../components/media/HeroCarousel";
 import { MediaCard } from "../../components/media/MediaCard";
 import { MediaRail } from "../../components/media/MediaRail";
 import { SectionHeader } from "../../components/media/SectionHeader";
 import { ZenIcon } from "../../components/Icon/icons";
+import { selectHeroTitles } from "./heroCarousel";
+import { PromoBanner } from "./PromoBanner";
+import { interleavePromos, promoSlots } from "./promos";
 import "./HomeFeed.css";
 
 /** Picks the featured hero subject: first item with an available resource. */
@@ -43,6 +48,17 @@ const SKELETON_SECTIONS = ["Popular Movies", "Popular Series", "Trending Now", "
  */
 export function HomeFeed() {
   const { status, data, error, retry } = useHomeFeed();
+
+  // Stable per mount: featured order and promo placement never reshuffle
+  // while the user scrolls, but a fresh page load can differ.
+  const [heroRng] = useState(() => Math.random);
+  const [promoSeed] = useState(() => Math.random());
+
+  const contentRows = data?.rows.filter((row) => row.subjects.length > 0) ?? [];
+  const rowsWithPromos = useMemo(
+    () => interleavePromos(contentRows, promoSlots(contentRows.length, promoSeed)),
+    [contentRows, promoSeed],
+  );
 
   if (status === "loading") {
     return (
@@ -81,10 +97,6 @@ export function HomeFeed() {
 
   const hero = heroSubject(data);
 
-  // The live feed includes structural rows (banners, filters, empty
-  // custom collections) that carry no subjects — never show an empty rail.
-  const contentRows = data.rows.filter((row) => row.subjects.length > 0);
-
   if (contentRows.length === 0) {
     return (
       <EmptyState
@@ -94,24 +106,36 @@ export function HomeFeed() {
     );
   }
 
+  // Featured rotation: up to ten real, eligible titles, shuffled per load.
+  // Falls back to the single hero pick when nothing has artwork + resource.
+  const heroItems = selectHeroTitles(data, heroRng);
+  const featured =
+    heroItems.length > 1 ? (
+      <HeroCarousel items={heroItems} />
+    ) : heroItems.length === 1 ? (
+      <Hero item={heroItems[0]!} titleId="zs-hero-title" />
+    ) : (
+      hero && <Hero item={hero} titleId="zs-hero-title" />
+    );
+
   return (
     <div className="zs-home-feed">
-      {hero && (
-        <div className="zs-home-feed__hero">
-          <Hero item={hero} />
-        </div>
-      )}
+      {featured && <div className="zs-home-feed__hero">{featured}</div>}
       <div className="zs-home-feed__sections">
-        {contentRows.map((row) => (
-          <section key={row.opId} className="zs-home-feed__section" aria-label={row.title}>
-            <SectionHeader title={row.title} action={browseActionFor(row)} />
-            <MediaRail title={row.title}>
-              {row.subjects.map((subject) => (
-                <MediaCard key={subject.subjectId} item={subject} className="zs-media-rail__card" />
-              ))}
-            </MediaRail>
-          </section>
-        ))}
+        {rowsWithPromos.map((entry) =>
+          entry.promo ? (
+            <PromoBanner key={entry.key} variant={entry.variant} />
+          ) : (
+            <section key={entry.key} className="zs-home-feed__section" aria-label={entry.row.title}>
+              <SectionHeader title={entry.row.title} action={browseActionFor(entry.row)} />
+              <MediaRail title={entry.row.title}>
+                {entry.row.subjects.map((subject) => (
+                  <MediaCard key={subject.subjectId} item={subject} className="zs-media-rail__card" />
+                ))}
+              </MediaRail>
+            </section>
+          ),
+        )}
       </div>
     </div>
   );

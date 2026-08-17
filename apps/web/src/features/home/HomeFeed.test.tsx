@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import type { MediaHomeFeed } from "@zen-stream/contracts";
 import { WatchlistProvider } from "../../store/watchlist";
@@ -162,6 +162,113 @@ describe("HomeFeed", () => {
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Nothing to discover yet" })).toBeInTheDocument();
     });
+  });
+
+  it("rotates multiple eligible titles through the featured carousel", async () => {
+    const carouselFeed: MediaHomeFeed = {
+      total: 2,
+      rows: [
+        {
+          title: "Action Picks",
+          opId: "op-a",
+          type: null,
+          total: 1,
+          subjects: [
+            {
+              subjectId: "movie-a",
+              type: "movie",
+              title: "Movie A",
+              poster: "https://cdn.example/a.jpg",
+              hasResource: true,
+              description: "First pick.",
+              releaseDate: "2026-01-01",
+              runtime: 100,
+              genre: "Action",
+              rating: 7.5,
+              language: null,
+              country: null,
+            },
+          ],
+        },
+        {
+          title: "Drama Picks",
+          opId: "op-b",
+          type: null,
+          total: 1,
+          subjects: [
+            {
+              subjectId: "movie-b",
+              type: "movie",
+              title: "Movie B",
+              poster: "https://cdn.example/b.jpg",
+              hasResource: true,
+              description: "Second pick.",
+              releaseDate: "2026-02-01",
+              runtime: 110,
+              genre: "Drama",
+              rating: 8,
+              language: null,
+              country: null,
+            },
+          ],
+        },
+      ],
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => jsonResponse(carouselFeed)));
+    renderHome();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Next featured title" })).toBeInTheDocument();
+    });
+    // Only the active slide exposes its heading; the second stays hidden.
+    const headings = screen.getAllByRole("heading", { level: 1 });
+    expect(headings).toHaveLength(1);
+    const initialTitle = headings[0]!.textContent;
+    expect(["Movie A", "Movie B"]).toContain(initialTitle);
+    const otherTitle = initialTitle === "Movie A" ? "Movie B" : "Movie A";
+    expect(screen.getByRole("button", { name: `Show ${otherTitle}` })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Next featured title" }));
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(otherTitle);
+    });
+  });
+
+  it("interleaves a download promo between rails on a full feed", async () => {
+    const fullFeed: MediaHomeFeed = {
+      total: 4,
+      rows: ["One", "Two", "Three", "Four"].map((title, index) => ({
+        title,
+        opId: `op-${index}`,
+        type: "SUBJECTS_MOVIE",
+        total: 1,
+        subjects: [
+          {
+            subjectId: `movie-${index}`,
+            type: "movie",
+            title: `Movie ${title}`,
+            poster: null,
+            hasResource: true,
+            description: null,
+            releaseDate: null,
+            runtime: null,
+            genre: null,
+            rating: null,
+            language: null,
+            country: null,
+          },
+        ],
+      })),
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => jsonResponse(fullFeed)));
+    renderHome();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Download the Zen-Stream app")).toBeInTheDocument();
+    });
+    // Every rail still renders alongside the promo.
+    expect(screen.getByRole("heading", { name: "One" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Four" })).toBeInTheDocument();
   });
 
   it("shows an error state with retry on failure", async () => {
