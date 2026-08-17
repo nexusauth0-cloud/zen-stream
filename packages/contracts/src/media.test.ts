@@ -144,6 +144,12 @@ describe("searchResponseSchema", () => {
     const result = searchResponseSchema.parse({ items: [] });
     expect(result.pager).toEqual({ hasMore: false, page: 1, perPage: 20, totalCount: 0 });
   });
+
+  it("tolerates a null pager (upstream empty search response)", () => {
+    const result = searchResponseSchema.parse({ items: [], pager: null });
+    expect(result.items).toEqual([]);
+    expect(result.pager).toEqual({ hasMore: false, page: 1, perPage: 20, totalCount: 0 });
+  });
 });
 
 describe("infoResponseSchema", () => {
@@ -225,6 +231,53 @@ describe("streamResponseSchema", () => {
       captions: [],
     });
     expect(result.total).toBe(1);
+  });
+
+  it("normalizes upstream captions as objects", () => {
+    const result = streamResponseSchema.parse({
+      streams: [
+        {
+          quality: "720p",
+          resolution: 720,
+          url: "https://relay.example/media/x?e=1&s=2",
+          format: "mp4",
+          size: "211 MB",
+          codecName: "hevc",
+          duration: 4005,
+          captions: [{ language: "English", language_code: "en", url: "https://cdn.example/en.vtt" }],
+          se: 5,
+          ep: 8,
+        },
+      ],
+      total: 1,
+    });
+
+    expect(result.streams[0]!.captions).toEqual([
+      { language: "English", language_code: "en", url: "https://cdn.example/en.vtt" },
+    ]);
+  });
+
+  it("tolerates extra upstream fields (filename, thumbnails)", () => {
+    const result = streamResponseSchema.parse({
+      streams: [
+        {
+          quality: "480p",
+          resolution: 480,
+          url: "https://relay.example/media/x?e=1&s=2",
+          filename: "Movie_1080p_bySpün.mp4",
+          format: "mp4",
+          size: null,
+          codecName: null,
+          duration: null,
+          captions: [],
+          se: 0,
+          ep: 0,
+        },
+      ],
+      total: 1,
+    });
+
+    expect(result.streams[0]).toMatchObject({ quality: "480p", resolution: 480 });
   });
 });
 

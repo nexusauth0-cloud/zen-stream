@@ -72,22 +72,22 @@ export function createMediaClient(
 
   return {
     async fetchHome() {
-      const raw = await request("/api/v1/home");
+      const raw = await request("/home");
       return homeFeedSchema.parse(raw);
     },
 
     async fetchHomeRows() {
-      const raw = await request("/api/v1/home/rows");
+      const raw = await request("/home/rows");
       return homeRowsSchema.parse(raw);
     },
 
     async fetchHomeSubjects(opId: string) {
-      const raw = await request(`/api/v1/home/subjects?opId=${encodeURIComponent(opId)}`);
+      const raw = await request(`/home/subjects?opId=${encodeURIComponent(opId)}`);
       return homeSubjectsSchema.parse(raw);
     },
 
     async fetchSearch(params: MediaSearchUpstreamParams) {
-      const raw = await request("/api/v1/search", {
+      const raw = await request("/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -100,18 +100,18 @@ export function createMediaClient(
     },
 
     async fetchInfo(subjectId: string) {
-      const raw = await request(`/api/v1/info/${encodeURIComponent(subjectId)}`);
+      const raw = await request(`/info/${encodeURIComponent(subjectId)}`);
       return infoResponseSchema.parse(raw);
     },
 
     async fetchSeason(subjectId: string) {
-      const raw = await request(`/api/v1/season/${encodeURIComponent(subjectId)}`);
+      const raw = await request(`/season/${encodeURIComponent(subjectId)}`);
       return seasonResponseSchema.parse(raw);
     },
 
     async fetchStream(subjectId: string, params: MediaStreamUpstreamParams) {
       const raw = await request(
-        `/api/v1/stream/${encodeURIComponent(subjectId)}?se=${params.se}&ep=${params.ep}`,
+        `/stream/${encodeURIComponent(subjectId)}?se=${params.se}&ep=${params.ep}`,
       );
       return streamResponseSchema.parse(raw);
     },

@@ -171,7 +171,8 @@ export const searchResponseSchema = z
         perPage: z.number().nullish(),
         totalCount: z.number().nullish(),
       })
-      .default({}),
+      .nullish()
+      .transform((value) => value ?? {}),
   })
   .transform((raw) => ({
     items: raw.items.map((item) => ({
@@ -281,6 +282,12 @@ export const mediaStreamParamsSchema = z.object({
 });
 export type MediaStreamParams = z.infer<typeof mediaStreamParamsSchema>;
 
+const captionSchema = z.object({
+  language: z.string().nullish().transform((value) => value ?? ""),
+  language_code: z.string().nullish().transform((value) => value ?? ""),
+  url: z.string().nullish().transform((value) => value ?? ""),
+});
+
 const streamSchema = z.object({
   quality: z.string(),
   resolution: z.number().int().positive(),
@@ -289,7 +296,7 @@ const streamSchema = z.object({
   size: nullableString,
   codecName: nullableString,
   duration: nullableNumber,
-  captions: z.array(z.string()).nullish().transform((value) => value ?? []),
+  captions: z.array(captionSchema).nullish().transform((value) => value ?? []),
   se: z.number().int().nullish().transform((value) => value ?? 0),
   ep: z.number().int().nullish().transform((value) => value ?? 0),
 });

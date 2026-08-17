@@ -21,15 +21,25 @@ npm run dev
 - Web: http://localhost:5173
 - Server: http://localhost:4000
 
-The server proxies catalog metadata from an upstream media API. To enable
-the discovery feed, set the server-side credentials first (see
+The server proxies catalog metadata from a self-hosted media worker. The
+reference API is the [Spün MovieBox API](https://github.com/heisdanny64/spun-moviebox-api)
+Cloudflare Worker (self-host it with your own secrets). To enable the
+discovery feed, set the server-side credentials first (see
 `apps/server/.env.example`):
 
 ```bash
-export MEDIA_API_BASE_URL=https://your-upstream-worker.example.com
+export MEDIA_API_BASE_URL=https://your-worker.workers.dev
 export MEDIA_API_SECRET=your-worker-secret
 npm run dev
 ```
+
+- `MEDIA_API_BASE_URL` is the worker root URL — the proxy calls its
+  root-level routes (`/home`, `/search`, `/info/:subjectId`,
+  `/season/:subjectId`, `/stream/:subjectId`); there is no `/api/v1`
+  prefix on the worker.
+- `MEDIA_API_SECRET` is sent as the `X-Worker-Secret` header and must match
+  the secret the worker operator configured (`MOVIEBOX_SECRET` on the
+  reference worker).
 
 Without these, the app still runs and every media request surfaces an
 honest `MEDIA_NOT_CONFIGURED` state (503) instead of fake content.
