@@ -74,6 +74,14 @@ describe("createMediaClient", () => {
     await expect(client.fetchHome()).rejects.toMatchObject({ status: 500 });
   });
 
+  it("maps a non-JSON upstream body to a retryable typed error", async () => {
+    const fetchImpl = vi.fn(async () => new Response("<html>gateway</html>", { status: 200 }));
+    const client = createMediaClient(CONFIG, fetchImpl as unknown as UpstreamFetch);
+
+    await expect(client.fetchHome()).rejects.toBeInstanceOf(UpstreamHttpError);
+    await expect(client.fetchHome()).rejects.toMatchObject({ status: 200 });
+  });
+
   it("validates the upstream home payload against the contract", async () => {
     const fetchImpl = vi.fn(async () => jsonResponse({ total: 1, rows: [] }));
     const client = createMediaClient(CONFIG, fetchImpl as unknown as UpstreamFetch);

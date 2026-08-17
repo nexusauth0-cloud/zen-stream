@@ -67,7 +67,17 @@ export function createMediaClient(
       throw new UpstreamHttpError(response.status, `Upstream media API responded with ${response.status}.`);
     }
 
-    return response.json() as Promise<unknown>;
+    // A transient upstream/relay failure can yield a non-JSON body (empty
+    // response, gateway page). Treat that as a retryable upstream error
+    // instead of letting the JSON parse blow up into a 500 INTERNAL_ERROR.
+    try {
+      return (await response.json()) as unknown;
+    } catch {
+      throw new UpstreamHttpError(
+        response.status,
+        `Upstream media API returned a non-JSON response (${response.status}).`,
+      );
+    }
   }
 
   return {
