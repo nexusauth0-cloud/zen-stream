@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ZenIcon } from "../Icon/icons";
 import { PRIMARY_NAV } from "../../app/navigation";
 import type { NavItem } from "../../app/navigation";
@@ -14,7 +14,17 @@ const SEARCH_LABEL = "Search movies and TV shows";
  */
 export function Header() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [query, setQuery] = useState("");
+  const onSearchRoute = location.pathname === "/search";
+
+  // The header input mirrors the route's search query: it shows the active
+  // query on /search and a fresh placeholder everywhere else, so Home never
+  // looks like a stale search state after navigating away.
+  useEffect(() => {
+    setQuery(onSearchRoute ? (searchParams.get("q") ?? "") : "");
+  }, [onSearchRoute, searchParams]);
 
   return (
     <header className="zs-header">

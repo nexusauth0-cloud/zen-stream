@@ -25,6 +25,7 @@ export interface HeroProps {
  * backdrop when present; otherwise a branded gradient fallback.
  */
 export function Hero({ item, watchLabel = "Watch", titleId }: HeroProps) {
+  const primaryLabel = watchLabel || "Watch";
   return (
     <section className="zs-hero" aria-labelledby={titleId}>
       <div className="zs-hero__backdrop" aria-hidden="true">
@@ -56,7 +57,7 @@ export function Hero({ item, watchLabel = "Watch", titleId }: HeroProps) {
         <div className="zs-hero__actions">
           <ButtonLink to={`/watch/${item.subjectId}`} variant="primary" size="md">
             <ZenIcon name="play" size={16} />
-            {watchLabel}
+            {primaryLabel}
           </ButtonLink>
           <ButtonLink to={detailsRouteFor(item)} variant="secondary" size="md">
             Details

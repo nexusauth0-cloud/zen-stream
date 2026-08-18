@@ -37,7 +37,6 @@
     --zs-text-2xl: 1.5rem;
     --zs-text-3xl: 1.875rem;
     --zs-text-display: clamp(1.75rem, 4vw, 3.25rem);
-    --zs-text-hero: clamp(1.5rem, 3.5vw, 2.75rem);
     --zs-weight-regular: 400;
     --zs-weight-medium: 500;
     --zs-weight-semibold: 600;
@@ -86,11 +85,19 @@
     --zs-breakpoint-md: 768px;
     --zs-breakpoint-lg: 1024px;
     --zs-breakpoint-xl: 1280px;
+
+    /* Featured hero: one deterministic box on every state (loading,
+       single title, carousel slide) so page geometry never shifts.
+       Bottom-anchored content; controls live inside the same box. */
+    --zs-hero-h: clamp(14.5rem, 34vh, 19rem);
+    --zs-hero-details-h: clamp(13rem, 32vh, 19rem);
   }
 
   @media (min-width: 768px) {
     :root {
       --zs-container-gutter: 1.5rem;
+      --zs-hero-h: clamp(15.5rem, 38vh, 21rem);
+      --zs-hero-details-h: clamp(13.5rem, 32vh, 20rem);
     }
   }
 

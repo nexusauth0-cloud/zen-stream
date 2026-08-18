@@ -7,7 +7,7 @@
 }
 
 .zs-home-feed__hero-skeleton {
-  height: clamp(14rem, 36vh, 21rem);
+  height: var(--zs-hero-h);
   margin-inline: calc(50% - 50vw);
   margin-bottom: var(--zs-space-5);
   background: linear-gradient(
@@ -22,7 +22,7 @@
 }
 
 .zs-home-feed__hero-unavailable {
-  height: clamp(12rem, 32vh, 20rem);
+  height: var(--zs-hero-h);
   margin-inline: calc(50% - 50vw);
   margin-bottom: var(--zs-space-5);
   display: grid;

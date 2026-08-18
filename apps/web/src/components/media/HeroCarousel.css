@@ -1,9 +1,14 @@
 .zs-hero-carousel {
   position: relative;
+  height: var(--zs-hero-h);
   margin-inline: calc(50% - 50vw);
 }
 
+/* Slides overlay the same reserved box: the carousel geometry never
+   changes between slides, during crossfades, or while artwork loads. */
 .zs-hero-carousel__slide {
+  position: absolute;
+  inset: 0;
   opacity: 0;
   visibility: hidden;
   transition:
@@ -18,6 +23,7 @@
 }
 
 .zs-hero-carousel .zs-hero {
+  height: 100%;
   margin-inline: 0;
 }
 
@@ -27,8 +33,9 @@
 
 .zs-hero-carousel__dots {
   position: absolute;
-  right: var(--zs-container-gutter);
+  left: 50%;
   bottom: var(--zs-space-3);
+  transform: translateX(-50%);
   display: flex;
   gap: var(--zs-space-2);
   padding: var(--zs-space-1) var(--zs-space-2);
@@ -57,18 +64,15 @@
 }
 
 @media (min-width: 768px) {
+  /* Vertically centered on the right edge: never collides with the
+     bottom-anchored title/CTA zone and never drifts between slides. */
   .zs-hero-carousel__arrows {
     display: flex;
     gap: var(--zs-space-2);
     position: absolute;
+    top: 50%;
     right: var(--zs-container-gutter);
-    bottom: var(--zs-space-4);
-  }
-
-  .zs-hero-carousel__dots {
-    right: auto;
-    left: var(--zs-container-gutter);
-    bottom: var(--zs-space-5);
+    transform: translateY(-50%);
   }
 
   .zs-hero-carousel__arrow {
