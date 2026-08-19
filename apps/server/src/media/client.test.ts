@@ -74,6 +74,16 @@ describe("createMediaClient", () => {
     await expect(client.fetchHome()).rejects.toMatchObject({ status: 500 });
   });
 
+  it("maps transport-level failures (network/timeout) to a retryable 502", async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new TypeError("fetch failed");
+    });
+    const client = createMediaClient(CONFIG, fetchImpl as unknown as UpstreamFetch);
+
+    await expect(client.fetchHome()).rejects.toBeInstanceOf(UpstreamHttpError);
+    await expect(client.fetchHome()).rejects.toMatchObject({ status: 502 });
+  });
+
   it("maps a non-JSON upstream body to a retryable typed error", async () => {
     const fetchImpl = vi.fn(async () => new Response("<html>gateway</html>", { status: 200 }));
     const client = createMediaClient(CONFIG, fetchImpl as unknown as UpstreamFetch);

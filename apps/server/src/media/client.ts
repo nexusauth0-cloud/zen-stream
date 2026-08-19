@@ -64,13 +64,21 @@ export function createMediaClient(
   const baseUrl = config.baseUrl.replace(/\/+$/, "");
 
   async function request(path: string, init?: RequestInit): Promise<unknown> {
-    const response = await fetchImpl(`${baseUrl}${path}`, {
-      ...init,
-      headers: {
-        [AUTH_HEADER]: config.secret,
-        ...(init?.headers ?? {}),
-      },
-    });
+    let response: Response;
+    try {
+      response = await fetchImpl(`${baseUrl}${path}`, {
+        ...init,
+        headers: {
+          [AUTH_HEADER]: config.secret,
+          ...(init?.headers ?? {}),
+        },
+      });
+    } catch {
+      // Transport-level failure (DNS, connection reset, timeout, abort) —
+      // distinct from an HTTP error response. Surface it through the same
+      // retryable 502 channel so the client never sees a raw 500.
+      throw new UpstreamHttpError(502, "The media API could not be reached.");
+    }
 
     if (!response.ok) {
       throw new UpstreamHttpError(response.status, `Upstream media API responded with ${response.status}.`);
