@@ -95,6 +95,7 @@ describe("AppShell", () => {
       "/most-watched",
       "/genres",
       "/search",
+      "/coming-soon",
       "/my-list",
     ]);
   });

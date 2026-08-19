@@ -8,6 +8,7 @@ import { AnimationPage } from "./pages/AnimationPage";
 import { MostWatchedPage } from "./pages/MostWatchedPage";
 import { SearchPage } from "./pages/SearchPage";
 import { MyListPage } from "./pages/MyListPage";
+import { ComingSoonPage } from "./pages/ComingSoonPage";
 import { HistoryPage } from "./pages/HistoryPage";
 import { AccountPage } from "./pages/AccountPage";
 import { MoviePage } from "./pages/MoviePage";
@@ -26,6 +27,7 @@ import { NotFoundPage } from "./pages/NotFoundPage";
  * `/animation`      Animation & anime collections
  * `/most-watched`   Popularity collections (popular/trending)
  * `/search`         Search (URL-synced query)
+ * `/coming-soon`    Upcoming releases
  * `/movie/:id`      Movie details
  * `/series/:id`     Series details (seasons + episodes)
  * `/watch/:id`      Player
@@ -46,6 +48,7 @@ export function AppRoutes() {
         <Route path="/animation" element={<AnimationPage />} />
         <Route path="/most-watched" element={<MostWatchedPage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/coming-soon" element={<ComingSoonPage />} />
         <Route path="/movie/:subjectId" element={<MoviePage />} />
         <Route path="/series/:subjectId" element={<SeriesDetailPage />} />
         <Route path="/watch/:subjectId" element={<WatchPage />} />

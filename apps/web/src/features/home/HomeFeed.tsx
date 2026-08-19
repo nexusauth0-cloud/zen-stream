@@ -1,4 +1,5 @@
 import type { MediaHomeFeed, MediaSubjectSummary } from "@zen-stream/contracts";
+import { getMediaAvailability } from "@zen-stream/contracts";
 import { useMemo, useState } from "react";
 import { useHomeFeed } from "../../api/hooks";
 import { ErrorState, EmptyState } from "../../components/feedback/States";
@@ -22,6 +23,24 @@ export function heroSubject(feed: MediaHomeFeed): MediaSubjectSummary | null {
     }
   }
   return feed.rows[0]?.subjects[0] ?? null;
+}
+
+/**
+ * All upcoming titles across the feed, deduplicated and ordered by release
+ * date (soonest first). Derived from real data only — nothing is invented.
+ */
+export function collectUpcoming(feed: MediaHomeFeed): MediaSubjectSummary[] {
+  const seen = new Set<string>();
+  const upcoming: MediaSubjectSummary[] = [];
+  for (const row of feed.rows) {
+    for (const subject of row.subjects) {
+      if (seen.has(subject.subjectId)) continue;
+      if (getMediaAvailability(subject) !== "coming-soon") continue;
+      seen.add(subject.subjectId);
+      upcoming.push(subject);
+    }
+  }
+  return upcoming.sort((a, b) => (a.releaseDate ?? "").localeCompare(b.releaseDate ?? ""));
 }
 
 /**
@@ -96,6 +115,7 @@ export function HomeFeed() {
   }
 
   const hero = heroSubject(data);
+  const upcoming = collectUpcoming(data);
 
   if (contentRows.length === 0) {
     return (
@@ -122,6 +142,19 @@ export function HomeFeed() {
     <div className="zs-home-feed">
       {featured && <div className="zs-home-feed__hero">{featured}</div>}
       <div className="zs-home-feed__sections">
+        {upcoming.length > 0 && (
+          <section className="zs-home-feed__section" aria-label="Coming Soon">
+            <SectionHeader
+              title="Coming Soon"
+              action={{ label: "See all", to: "/coming-soon" }}
+            />
+            <MediaRail title="Coming Soon">
+              {upcoming.map((subject) => (
+                <MediaCard key={subject.subjectId} item={subject} className="zs-media-rail__card" />
+              ))}
+            </MediaRail>
+          </section>
+        )}
         {rowsWithPromos.map((entry) =>
           entry.promo ? (
             <PromoBanner key={entry.key} variant={entry.variant} />

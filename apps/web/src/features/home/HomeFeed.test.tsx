@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import type { MediaHomeFeed } from "@zen-stream/contracts";
+import type { MediaHomeFeed, MediaSubjectSummary } from "@zen-stream/contracts";
 import { WatchlistProvider } from "../../store/watchlist";
-import { HomeFeed, heroSubject } from "./HomeFeed";
+import { HomeFeed, collectUpcoming, heroSubject } from "./HomeFeed";
 
 function feed(): MediaHomeFeed {
   return {
@@ -291,5 +291,134 @@ describe("HomeFeed", () => {
     await waitFor(() => {
       expect(screen.getByRole("status")).toBeInTheDocument();
     });
+  });
+});
+
+describe("collectUpcoming", () => {
+  function upcomingItem(subjectId: string, releaseDate: string): MediaSubjectSummary {
+    return {
+      subjectId,
+      type: "movie",
+      title: subjectId,
+      poster: null,
+      hasResource: true,
+      description: null,
+      releaseDate,
+      runtime: null,
+      genre: null,
+      rating: null,
+      language: null,
+      country: null,
+    };
+  }
+
+  it("collects only future releases, deduplicated and date-ordered", () => {
+    const feed: MediaHomeFeed = {
+      total: 2,
+      rows: [
+        {
+          title: "Row A",
+          opId: "op-a",
+          type: null,
+          total: 3,
+          subjects: [
+            upcomingItem("later", "2026-09-01"),
+            upcomingItem("sooner", "2026-08-20"),
+            upcomingItem("released", "2026-08-01"),
+          ],
+        },
+        {
+          title: "Row B",
+          opId: "op-b",
+          type: null,
+          total: 1,
+          subjects: [upcomingItem("sooner", "2026-08-20")],
+        },
+      ],
+    };
+    expect(collectUpcoming(feed).map((item) => item.subjectId)).toEqual(["sooner", "later"]);
+  });
+
+  it("returns nothing when every title is released or unknown", () => {
+    const feed: MediaHomeFeed = {
+      total: 1,
+      rows: [
+        {
+          title: "Row",
+          opId: "op",
+          type: null,
+          total: 2,
+          subjects: [
+            upcomingItem("released", "2026-08-01"),
+            { ...upcomingItem("nodate", ""), releaseDate: null },
+          ],
+        },
+      ],
+    };
+    expect(collectUpcoming(feed)).toEqual([]);
+  });
+});
+
+describe("HomeFeed coming soon rail", () => {
+  it("renders a Coming Soon rail only when the feed has upcoming titles", async () => {
+    const feedWithUpcoming: MediaHomeFeed = {
+      total: 1,
+      rows: [
+        {
+          title: "Action Picks",
+          opId: "op-a",
+          type: null,
+          total: 2,
+          subjects: [
+            {
+              subjectId: "movie-a",
+              type: "movie",
+              title: "Released A",
+              poster: null,
+              hasResource: true,
+              description: null,
+              releaseDate: "2026-06-01",
+              runtime: null,
+              genre: null,
+              rating: null,
+              language: null,
+              country: null,
+            },
+            {
+              subjectId: "movie-b",
+              type: "movie",
+              title: "Upcoming B",
+              poster: null,
+              hasResource: true,
+              description: null,
+              releaseDate: "2026-09-15",
+              runtime: null,
+              genre: null,
+              rating: null,
+              language: null,
+              country: null,
+            },
+          ],
+        },
+      ],
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => jsonResponse(feedWithUpcoming)));
+    renderHome();
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Coming Soon" })).toBeInTheDocument();
+    });
+    expect(screen.getAllByText("Upcoming B").length).toBeGreaterThan(0);
+    expect(screen.getByRole("link", { name: "See all" })).toHaveAttribute("href", "/coming-soon");
+  });
+
+  it("does not render a Coming Soon rail when nothing is upcoming", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => jsonResponse(feed())));
+    renderHome();
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { level: 1, name: "YOURS BEFORE WORDS" })).toBeInTheDocument();
+    });
+    expect(screen.queryByRole("heading", { name: "Coming Soon" })).not.toBeInTheDocument();
   });
 });

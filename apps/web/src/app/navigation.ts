@@ -39,6 +39,7 @@ export const FOOTER_NAV: readonly { label: string; to: string }[] = [
   { label: "Most Watched", to: "/most-watched" },
   { label: "Genres", to: "/genres" },
   { label: "Search", to: "/search" },
+  { label: "Coming Soon", to: "/coming-soon" },
   { label: "My List", to: "/my-list" },
 ];
 
