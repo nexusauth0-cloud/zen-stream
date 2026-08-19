@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import type { MediaInfo, MediaSubjectSummary } from "@zen-stream/contracts";
@@ -9,7 +9,6 @@ import { Hero } from "./Hero";
 import { MediaCard, detailsRouteFor } from "./MediaCard";
 import { MediaMetadata, releaseYear } from "./MediaMetadata";
 import { RatingBadge } from "./RatingBadge";
-import { ShareButton } from "./ShareButton";
 import { WatchlistButton } from "./WatchlistButton";
 import { WatchlistProvider } from "../../store/watchlist";
 
