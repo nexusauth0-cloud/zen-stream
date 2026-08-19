@@ -17,7 +17,6 @@
   min-height: 56px;
   padding: calc(var(--zs-space-2) + env(safe-area-inset-top, 0px)) var(--zs-container-gutter);
 }
-
 .zs-header__brand {
   display: inline-flex;
   align-items: center;
@@ -90,13 +89,11 @@
 
 .zs-header__search {
   display: none;
-  flex: 1;
   justify-content: flex-end;
 }
 
 .zs-header__search-field {
   position: relative;
-  width: clamp(16rem, 24vw, 26rem);
 }
 
 .zs-header__search-input {
@@ -169,8 +166,46 @@
 }
 
 @media (min-width: 768px) {
+  /* Three-region layout: brand | centered nav | search. The two outer
+     columns are always equal (1fr) and the middle cell has no gaps, so
+     the nav sits dead-center no matter how wide the search field is.
+     Spacing comes from padding inside the outer cells instead. */
+  .zs-header__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0;
+  }
+
+  .zs-header__brand {
+    justify-self: start;
+    padding-right: var(--zs-space-3);
+  }
+
   .zs-header__nav {
     display: block;
+    justify-self: center;
+  }
+
+  .zs-header__nav-list {
+    white-space: nowrap;
+  }
+
+  .zs-header__search {
+    justify-self: end;
+    min-width: 0;
+    padding-left: var(--zs-space-3);
+  }
+
+  .zs-header__search-field {
+    width: clamp(16rem, 24vw, 26rem);
+    max-width: 100%;
+  }
+
+  .zs-header__search-link {
+    justify-self: end;
+    margin-left: 0;
+    padding-left: var(--zs-space-3);
   }
 }
 
