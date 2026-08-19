@@ -1,9 +1,12 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { useStream } from "../api/hooks";
+import type { MediaInfo } from "@zen-stream/contracts";
+import { formatMediaReleaseDate, getMediaAvailability } from "@zen-stream/contracts";
+import { useMediaInfo, useStream } from "../api/hooks";
 import { ButtonLink } from "../components/ButtonLink/ButtonLink";
 import { ErrorState } from "../components/feedback/States";
 import { ZenIcon } from "../components/Icon/icons";
+import { WatchlistButton } from "../components/media/WatchlistButton";
 import "./WatchPage.css";
 
 type PlayerStatus = "loading" | "ready" | "playing" | "paused" | "unavailable" | "error";
@@ -14,6 +17,7 @@ export function WatchPage() {
   const se = Number(searchParams.get("se") ?? 0);
   const ep = Number(searchParams.get("ep") ?? 0);
 
+  const infoState = useMediaInfo(subjectId);
   const { status, data, error, retry } = useStream({ subjectId, se, ep });
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playerStatus, setPlayerStatus] = useState<PlayerStatus>("loading");
@@ -26,6 +30,27 @@ export function WatchPage() {
   const handleCanPlay = useCallback(() => {
     if (playerStatus === "loading") setPlayerStatus("ready");
   }, [playerStatus]);
+
+  // Honest availability guard: upcoming or non-playable titles never reach
+  // the player. The guard only intercepts when the info fetch succeeds —
+  // an upstream blip must never block playable titles.
+  const guard = useMemo(() => {
+    if (infoState.status !== "success" || !infoState.data) return null;
+    const availability = getMediaAvailability({
+      releaseDate: infoState.data.releaseDate,
+      hasResource: infoState.data.hasResource,
+    });
+    if (availability === "available") return null;
+    return availability === "coming-soon" ? "coming-soon" : "unavailable";
+  }, [infoState]);
+
+  if (guard === "coming-soon") {
+    return <ComingSoonGuard info={infoState.data!} />;
+  }
+
+  if (guard === "unavailable") {
+    return <UnavailableGuard retry={infoState.retry} />;
+  }
 
   if (status === "loading") {
     return (
@@ -138,6 +163,69 @@ export function WatchPage() {
           <ButtonLink to={`/series/${subjectId}`} variant="secondary" size="sm">
             Back to details
           </ButtonLink>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ComingSoonGuard({ info }: { info: MediaInfo }) {
+  const detailUrl = info.type === "movie" ? `/movie/${info.subjectId}` : `/series/${info.subjectId}`;
+  const date = formatMediaReleaseDate(info.releaseDate, { year: true }) ?? "soon";
+  return (
+    <section className="zs-player" aria-label="Coming soon">
+      <div className="zs-player__frame">
+        <div className="zs-player__message" role="status">
+          <ZenIcon name="calendar" size={32} />
+          <h1 className="zs-player__message-title">Coming Soon</h1>
+          <p className="zs-player__message-text">
+            {info.title} is not available to stream yet — it arrives {date}.
+          </p>
+          <div className="zs-player__guard-actions">
+            <WatchlistButton
+              item={{
+                subjectId: info.subjectId,
+                type: info.type,
+                title: info.title,
+                poster: info.poster,
+                hasResource: info.hasResource,
+                description: info.description,
+                releaseDate: info.releaseDate,
+                runtime: info.runtime,
+                genre: info.genre,
+                rating: info.rating,
+                language: info.language,
+                country: info.country,
+              }}
+              label="Save"
+              savedLabel="Saved"
+            />
+            <ButtonLink to={detailUrl} variant="secondary" size="sm">
+              Back to details
+            </ButtonLink>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function UnavailableGuard({ retry }: { retry: () => void }) {
+  return (
+    <section className="zs-player" aria-label="Playback unavailable">
+      <div className="zs-player__frame">
+        <div className="zs-player__message" role="status">
+          <ZenIcon name="alert" size={32} />
+          <h1 className="zs-player__message-title">Playback unavailable</h1>
+          <p className="zs-player__message-text">This title cannot be streamed right now.</p>
+          <div className="zs-player__guard-actions">
+            <button type="button" className="zs-button zs-button--primary" onClick={retry}>
+              Retry
+            </button>
+            <Link className="zs-player__back" to="/">
+              Back to browse
+            </Link>
+          </div>
         </div>
       </div>
     </section>

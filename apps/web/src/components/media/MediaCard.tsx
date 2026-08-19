@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { MediaSubjectSummary } from "@zen-stream/contracts";
+import { formatComingSoonLabel, getMediaAvailability } from "@zen-stream/contracts";
 import { useWatchlist } from "../../store/watchlist";
 import { ZenIcon } from "../Icon/icons";
 import { MediaBadge } from "./MediaBadge";
@@ -22,7 +23,8 @@ export function detailsRouteFor(item: Pick<MediaSubjectSummary, "subjectId" | "t
 /**
  * Catalog poster card. Real poster artwork when available, a quiet branded
  * fallback otherwise. Type and rating badges on the artwork, a compact
- * "⭐ rating · year" meta line, and a watchlist toggle that must not
+ * "⭐ rating · year" meta line, availability-aware badges (COMING SOON with
+ * its release date, PREVIEW), and a watchlist toggle that must not
  * navigate (stopPropagation is unnecessary — the toggle is a real button
  * beside the link, not nested inside it).
  */
@@ -30,8 +32,16 @@ export function MediaCard({ item, className, to }: MediaCardProps) {
   const { isSaved, toggle } = useWatchlist();
   const saved = isSaved(item.subjectId);
   const destination = to ?? detailsRouteFor(item);
+  const availability = getMediaAvailability({
+    releaseDate: item.releaseDate,
+    hasResource: item.hasResource,
+  });
+  const comingSoonLabel = formatComingSoonLabel(item.releaseDate);
   const year = releaseYear(item.releaseDate);
-  const metaSegments = [item.rating, year].filter((value) => value !== null && value !== undefined);
+  const metaSegments = [
+    item.rating,
+    availability === "coming-soon" ? comingSoonLabel : year,
+  ].filter((value) => value !== null && value !== undefined);
 
   return (
     <article className={`zs-media-card${className ? ` ${className}` : ""}`}>
@@ -54,6 +64,15 @@ export function MediaCard({ item, className, to }: MediaCardProps) {
             <MediaBadge type={item.type} />
             <RatingBadge rating={item.rating} />
           </div>
+          {availability === "coming-soon" && comingSoonLabel && (
+            <span className="zs-media-card__status zs-media-card__status--coming">
+              <ZenIcon name="calendar" size={12} />
+              {comingSoonLabel}
+            </span>
+          )}
+          {availability === "preview-only" && (
+            <span className="zs-media-card__status zs-media-card__status--preview">Preview</span>
+          )}
         </div>
         <div className="zs-media-card__body">
           <span className="zs-media-card__title">{item.title}</span>

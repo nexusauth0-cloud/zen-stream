@@ -88,6 +88,16 @@
 }
 
 .zs-player__back,
+.zs-player__retry,
+.zs-player__guard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--zs-space-3);
+  margin-top: var(--zs-space-4);
+}
+
 .zs-player__retry {
   margin-top: var(--zs-space-2);
   min-height: var(--zs-target-min);

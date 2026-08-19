@@ -7,13 +7,24 @@ export interface WatchlistButtonProps {
   item: MediaSubjectSummary;
   size?: "md" | "lg";
   className?: string;
+  /** Label of the unsaved state; defaults to "My List". */
+  label?: string;
+  /** Label of the saved state; defaults to "In My List". */
+  savedLabel?: string;
 }
 
 /**
  * Standalone watchlist toggle (details pages, hero). Shares the store with
- * the card-level save button, so state stays consistent everywhere.
+ * the card-level save button, so state stays consistent everywhere. Callers
+ * choose the label: "My List" for playable titles, "Save" for upcoming ones.
  */
-export function WatchlistButton({ item, size = "md", className }: WatchlistButtonProps) {
+export function WatchlistButton({
+  item,
+  size = "md",
+  className,
+  label = "My List",
+  savedLabel = "In My List",
+}: WatchlistButtonProps) {
   const { isSaved, toggle } = useWatchlist();
   const saved = isSaved(item.subjectId);
 
@@ -32,7 +43,7 @@ export function WatchlistButton({ item, size = "md", className }: WatchlistButto
       onClick={() => toggle(item)}
     >
       <ZenIcon name={saved ? "check" : "bookmark"} size={size === "lg" ? 18 : 16} />
-      {saved ? "In My List" : "My List"}
+      {saved ? savedLabel : label}
     </button>
   );
 }

@@ -33,7 +33,9 @@ export type ZenIconName =
   | "grid"
   | "sparkle"
   | "flame"
-  | "download";
+  | "download"
+  | "share"
+  | "calendar";
 
 export const ZEN_ICON_PATHS: Record<ZenIconName, ReactNode> = {
   home: (
@@ -130,6 +132,20 @@ export const ZEN_ICON_PATHS: Record<ZenIconName, ReactNode> = {
       <path d="M12 4v10" />
       <path d="m7.5 10.5 4.5 4.5 4.5-4.5" />
       <path d="M4.5 16.5v2a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-2" />
+    </>
+  ),
+  share: (
+    <>
+      <circle cx="6" cy="12" r="2.5" />
+      <circle cx="18" cy="5.5" r="2.5" />
+      <circle cx="18" cy="18.5" r="2.5" />
+      <path d="m8.2 10.8 7.6-4.1M8.2 13.2l7.6 4.1" />
+    </>
+  ),
+  calendar: (
+    <>
+      <rect x="3.5" y="5" width="17" height="15.5" rx="2" />
+      <path d="M3.5 9.5h17M8 3.5v3.5M16 3.5v3.5" />
     </>
   ),
 };

@@ -1,6 +1,14 @@
 export { healthResponseSchema, isHealthResponse } from "./health.js";
 export type { HealthResponse } from "./health.js";
 export {
+  formatComingSoonLabel,
+  formatMediaReleaseDate,
+  getMediaActions,
+  getMediaAvailability,
+  parseMediaReleaseDate,
+} from "./availability.js";
+export type { MediaActions, MediaAvailability, MediaAvailabilityInput } from "./availability.js";
+export {
   homeFeedSchema,
   homeRowsSchema,
   homeSubjectsSchema,

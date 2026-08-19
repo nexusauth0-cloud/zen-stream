@@ -86,7 +86,7 @@
   margin-top: var(--zs-space-3);
 }
 
-.zs-details-hero__unavailable {
+.zs-details-hero__release {
   color: var(--zs-color-text-muted);
   font-size: var(--zs-text-sm);
 }

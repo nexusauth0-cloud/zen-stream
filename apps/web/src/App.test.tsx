@@ -149,6 +149,22 @@ function mockResponse(body: unknown) {
   );
 }
 
+const INFO_BODY = {
+  subjectId: "123",
+  subjectType: 2,
+  title: "Series X",
+  description: null,
+  releaseDate: "2023-01-01",
+  runtime: null,
+  genre: null,
+  poster: null,
+  country: null,
+  rating: null,
+  hasResource: true,
+  language: null,
+  staff: [],
+};
+
 function mockHomeFeed() {
   mockResponse(HOME_FEED_BODY);
 }
@@ -271,7 +287,16 @@ describe("routing", () => {
   });
 
   it("renders the player at /watch/123", async () => {
-    mockResponse(STREAM_BODY);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        const body = String(url).includes("/stream/") ? STREAM_BODY : INFO_BODY;
+        return new Response(JSON.stringify(body), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }),
+    );
     renderAt("/watch/123");
 
     await waitFor(() => {
