@@ -1,0 +1,36 @@
+.zs-share-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--zs-space-2);
+  min-height: var(--zs-target-min);
+  padding: 0 var(--zs-space-5);
+  border-radius: var(--zs-radius-pill);
+  font-weight: var(--zs-weight-semibold);
+  color: var(--zs-color-text);
+  background: var(--zs-color-surface-elevated);
+  border: 1px solid var(--zs-color-border);
+  transition:
+    background var(--zs-duration-fast) var(--zs-ease-out),
+    border-color var(--zs-duration-fast) var(--zs-ease-out);
+}
+
+.zs-share-button--lg {
+  min-height: 3rem;
+  padding: 0 var(--zs-space-6);
+}
+
+.zs-share-button:hover {
+  background: var(--zs-color-surface-hover);
+  border-color: rgb(255 255 255 / 0.24);
+}
+
+.zs-share-button--copied {
+  color: var(--zs-color-primary-ink);
+  background: var(--zs-color-primary);
+  border-color: var(--zs-color-primary);
+}
+
+.zs-share-button--copied:hover {
+  background: var(--zs-color-primary-hover);
+}
