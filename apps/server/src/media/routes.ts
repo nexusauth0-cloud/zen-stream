@@ -3,9 +3,11 @@ import type { Request, Response, NextFunction } from "express";
 import { mediaSearchParamsSchema, mediaStreamParamsSchema } from "@zen-stream/contracts";
 import { ZodError } from "zod";
 import { ApiError } from "../errors.js";
-import { createMediaClient, UpstreamHttpError } from "./client.js";
+import { UpstreamHttpError } from "./client.js";
 import type { MediaUpstreamClient } from "./client.js";
-import { mediaApiConfig } from "./config.js";
+import { ProviderRegistry } from "../providers/registry.js";
+import { createClientProvider } from "../providers/client-provider.js";
+import type { MediaProvider, PlaybackProvider } from "../providers/types.js";
 
 function parseSubjectId(subjectId: string | undefined): string {
   const trimmed = subjectId?.trim() ?? "";
@@ -38,35 +40,52 @@ function translateUpstreamError(error: unknown): unknown {
 /**
  * Zen-Stream media proxy routes.
  *
- * The browser talks to these endpoints; the upstream media worker is only
- * ever contacted from this server, with its secret attached here. Upstream
- * payloads are validated against the shared contracts before being emitted,
- * so malformed or stale upstream data surfaces as a consistent 502 rather
- * than leaking into the client.
+ * The browser talks to these endpoints; upstream media providers are only
+ * ever contacted from this server, with their credentials attached there.
+ * Providers return canonical contract payloads, so malformed or stale
+ * upstream data surfaces as a consistent 502 rather than leaking into the
+ * client. An injected client (tests) is adapted through the same provider
+ * interfaces as the env-configured registry providers.
  */
-export function createMediaRouter(client?: MediaUpstreamClient): Router {
+export function createMediaRouter(
+  client?: MediaUpstreamClient,
+  providers: ProviderRegistry = new ProviderRegistry(),
+): Router {
   const router = Router();
 
-  function resolveClient(): MediaUpstreamClient {
-    if (client) return client;
-    const config = mediaApiConfig();
-    if (!config) {
+  function resolveMedia(): MediaProvider {
+    if (client) return createClientProvider(client);
+    const provider = providers.getMetadata();
+    if (!provider) {
       throw new ApiError(
         503,
         "MEDIA_NOT_CONFIGURED",
         "The media API is not configured on this server.",
       );
     }
-    return createMediaClient(config);
+    return provider;
+  }
+
+  function resolvePlayback(): PlaybackProvider {
+    if (client) return createClientProvider(client);
+    const provider = providers.getPlayback();
+    if (!provider) {
+      throw new ApiError(
+        503,
+        "MEDIA_NOT_CONFIGURED",
+        "The media API is not configured on this server.",
+      );
+    }
+    return provider;
   }
 
   function handle(
-    run: (media: MediaUpstreamClient, req: Request, res: Response) => Promise<void>,
+    run: (media: MediaProvider, req: Request, res: Response) => Promise<void>,
   ) {
     return (req: Request, res: Response, next: NextFunction) => {
       let promise: Promise<void>;
       try {
-        promise = run(resolveClient(), req, res);
+        promise = run(resolveMedia(), req, res);
       } catch (error) {
         next(translateUpstreamError(error));
         return;
@@ -130,19 +149,31 @@ export function createMediaRouter(client?: MediaUpstreamClient): Router {
 
   router.get(
     "/stream/:subjectId",
-    handle(async (media, req, res) => {
-      const params = mediaStreamParamsSchema.safeParse({
-        subjectId: parseSubjectId(firstParam(req.params.subjectId)),
-        se: firstParam(req.query.se) ?? "0",
-        ep: firstParam(req.query.ep) ?? "0",
-      });
-      if (!params.success) {
-        throw new ApiError(400, "VALIDATION_ERROR", "Invalid season or episode parameters.");
+    (req: Request, res: Response, next: NextFunction) => {
+      const run = async (playback: PlaybackProvider, request: Request, response: Response) => {
+        const params = mediaStreamParamsSchema.safeParse({
+          subjectId: parseSubjectId(firstParam(request.params.subjectId)),
+          se: firstParam(request.query.se) ?? "0",
+          ep: firstParam(request.query.ep) ?? "0",
+        });
+        if (!params.success) {
+          throw new ApiError(400, "VALIDATION_ERROR", "Invalid season or episode parameters.");
+        }
+        response.json(
+          await playback.fetchStream(params.data.subjectId, { se: params.data.se, ep: params.data.ep }),
+        );
+      };
+      let promise: Promise<void>;
+      try {
+        promise = run(resolvePlayback(), req, res);
+      } catch (error) {
+        next(translateUpstreamError(error));
+        return;
       }
-      res.json(
-        await media.fetchStream(params.data.subjectId, { se: params.data.se, ep: params.data.ep }),
-      );
-    }),
+      promise.catch((error: unknown) => {
+        next(translateUpstreamError(error));
+      });
+    },
   );
 
   return router;

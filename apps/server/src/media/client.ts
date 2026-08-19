@@ -7,6 +7,15 @@ import {
   seasonResponseSchema,
   streamResponseSchema,
 } from "@zen-stream/contracts";
+import type {
+  MediaHomeFeed,
+  MediaHomeRows,
+  MediaHomeSubjects,
+  MediaInfo,
+  MediaSearchResponse,
+  MediaSeasonResponse,
+  MediaStreamResponse,
+} from "@zen-stream/contracts";
 import type { MediaApiConfig } from "./config.js";
 
 export interface MediaSearchUpstreamParams {
@@ -21,13 +30,13 @@ export interface MediaStreamUpstreamParams {
 }
 
 export interface MediaUpstreamClient {
-  fetchHome(): Promise<unknown>;
-  fetchHomeRows(): Promise<unknown>;
-  fetchHomeSubjects(opId: string): Promise<unknown>;
-  fetchSearch(params: MediaSearchUpstreamParams): Promise<unknown>;
-  fetchInfo(subjectId: string): Promise<unknown>;
-  fetchSeason(subjectId: string): Promise<unknown>;
-  fetchStream(subjectId: string, params: MediaStreamUpstreamParams): Promise<unknown>;
+  fetchHome(): Promise<MediaHomeFeed>;
+  fetchHomeRows(): Promise<MediaHomeRows>;
+  fetchHomeSubjects(opId: string): Promise<MediaHomeSubjects>;
+  fetchSearch(params: MediaSearchUpstreamParams): Promise<MediaSearchResponse>;
+  fetchInfo(subjectId: string): Promise<MediaInfo>;
+  fetchSeason(subjectId: string): Promise<MediaSeasonResponse>;
+  fetchStream(subjectId: string, params: MediaStreamUpstreamParams): Promise<MediaStreamResponse>;
 }
 
 /**

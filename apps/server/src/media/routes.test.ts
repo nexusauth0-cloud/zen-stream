@@ -1,12 +1,21 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import request from "supertest";
 import type { MediaUpstreamClient } from "./client.js";
+import type {
+  MediaHomeFeed,
+  MediaHomeRows,
+  MediaHomeSubjects,
+  MediaInfo,
+  MediaSearchResponse,
+  MediaSeasonResponse,
+  MediaStreamResponse,
+} from "@zen-stream/contracts";
 import { UpstreamHttpError } from "./client.js";
 import { createApp } from "../app.js";
 
 function fakeClient(overrides: Partial<MediaUpstreamClient> = {}): MediaUpstreamClient {
   return {
-    fetchHome: vi.fn(async () => ({
+    fetchHome: vi.fn<() => Promise<MediaHomeFeed>>(async () => ({
       total: 1,
       rows: [
         {
@@ -33,11 +42,11 @@ function fakeClient(overrides: Partial<MediaUpstreamClient> = {}): MediaUpstream
         },
       ],
     })),
-    fetchHomeRows: vi.fn(async () => ({
+    fetchHomeRows: vi.fn<() => Promise<MediaHomeRows>>(async () => ({
       total: 1,
       rows: [{ title: "Nollywood Movie", opId: "op-1" }],
     })),
-    fetchHomeSubjects: vi.fn(async (opId: string) => ({
+    fetchHomeSubjects: vi.fn<(opId: string) => Promise<MediaHomeSubjects>>(async (opId: string) => ({
       opId,
       title: "Nollywood Movie",
       total: 1,
@@ -58,7 +67,7 @@ function fakeClient(overrides: Partial<MediaUpstreamClient> = {}): MediaUpstream
         },
       ],
     })),
-    fetchSearch: vi.fn(async () => ({
+    fetchSearch: vi.fn<() => Promise<MediaSearchResponse>>(async () => ({
       items: [
         {
           subjectId: "1654274595068805784",
@@ -75,7 +84,7 @@ function fakeClient(overrides: Partial<MediaUpstreamClient> = {}): MediaUpstream
       ],
       pager: { hasMore: true, page: 1, perPage: 20, totalCount: 200 },
     })),
-    fetchInfo: vi.fn(async () => ({
+    fetchInfo: vi.fn<() => Promise<MediaInfo>>(async () => ({
       subjectId: "1654274595068805784",
       type: "movie",
       title: "Avatar [Hindi]",
@@ -90,7 +99,7 @@ function fakeClient(overrides: Partial<MediaUpstreamClient> = {}): MediaUpstream
       language: "English",
       staff: [],
     })),
-    fetchSeason: vi.fn(async () => ({
+    fetchSeason: vi.fn<() => Promise<MediaSeasonResponse>>(async () => ({
       seasons: [
         {
           season: 1,
@@ -101,7 +110,7 @@ function fakeClient(overrides: Partial<MediaUpstreamClient> = {}): MediaUpstream
         },
       ],
     })),
-    fetchStream: vi.fn(async () => ({
+    fetchStream: vi.fn<() => Promise<MediaStreamResponse>>(async () => ({
       streams: [
         {
           quality: "1080p",
