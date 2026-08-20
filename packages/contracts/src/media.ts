@@ -41,6 +41,31 @@ const nullableBoolean = z
   .nullish()
   .transform((value) => value ?? false);
 
+/**
+ * Known cross-provider identities for a title. Values are the provider's
+ * own identifier for the title (MovieBox numeric resource id, Spün slug,
+ * DaraTech base64 id, TMDB numeric id, IMDb id). The server resolves these
+ * through the provider abstraction; consumers never guess them.
+ */
+export const externalIdsSchema = z
+  .object({
+    moviebox: nullableString,
+    spun: nullableString,
+    daratech: nullableString,
+    imdb: nullableString,
+    tmdb: nullableNumber,
+  })
+  .nullish()
+  .transform((value) => ({
+    moviebox: value?.moviebox ?? null,
+    spun: value?.spun ?? null,
+    daratech: value?.daratech ?? null,
+    imdb: value?.imdb ?? null,
+    tmdb: value?.tmdb ?? null,
+  }));
+
+export type MediaExternalIds = z.infer<typeof externalIdsSchema>;
+
 /* ── Subjects ─────────────────────────────────────────────────────────── */
 
 const rawSubjectSummarySchema = z.object({
@@ -215,11 +240,13 @@ const rawInfoSchema = z.object({
   runtime: nullableNumber,
   genre: nullableString,
   poster: nullableString,
+  backdrop: nullableString,
   country: nullableString,
   rating: nullableNumber,
   hasResource: nullableBoolean,
   language: nullableString,
   staff: z.array(staffMemberSchema).nullish().transform((value) => value ?? []),
+  externalIds: externalIdsSchema,
 });
 
 export const infoResponseSchema = rawInfoSchema.transform((raw) => ({
@@ -231,11 +258,13 @@ export const infoResponseSchema = rawInfoSchema.transform((raw) => ({
   runtime: raw.runtime,
   genre: raw.genre,
   poster: raw.poster,
+  backdrop: raw.backdrop,
   country: raw.country,
   rating: raw.rating,
   hasResource: raw.hasResource,
   language: raw.language,
   staff: raw.staff,
+  externalIds: raw.externalIds,
 }));
 
 export type MediaStaffMember = z.infer<typeof infoResponseSchema>["staff"][number];

@@ -1,5 +1,5 @@
-export { healthResponseSchema, isHealthResponse } from "./health.js";
-export type { HealthResponse } from "./health.js";
+export { healthResponseSchema, isHealthResponse, providerHealthResponseSchema, providerStatusSchema } from "./health.js";
+export type { HealthResponse, ProviderHealthResponse, ProviderStatus } from "./health.js";
 export {
   formatComingSoonLabel,
   formatMediaReleaseDate,
@@ -29,6 +29,7 @@ export {
 } from "./media.js";
 export type {
   MediaEpisode,
+  MediaExternalIds,
   MediaHomeFeed,
   MediaHomeRow,
   MediaHomeRows,
