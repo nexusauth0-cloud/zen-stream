@@ -6,6 +6,7 @@
  * always carry `hasResource: false`, so the availability model never treats
  * a TMDB title as playable.
  */
+import type { ProviderStatus } from "@zen-stream/contracts";
 import type { UpstreamFetch, MediaSearchUpstreamParams } from "../../media/client.js";
 import type { SecondaryMetadataProvider } from "../types.js";
 import type { TmdBApiConfig } from "./config.js";
@@ -41,6 +42,15 @@ export function createTmdBProvider(
         return tmdbInfoToResponse(await client.fetchMovie(parsed.id));
       }
       return tmdbInfoToResponse(await client.fetchTv(parsed.id));
+    },
+
+    async health(): Promise<ProviderStatus> {
+      try {
+        await client.health();
+        return "healthy";
+      } catch {
+        return "offline";
+      }
     },
   };
 }

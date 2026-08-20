@@ -34,6 +34,7 @@ export interface TmdBClient {
   fetchMovie(id: number): Promise<TmdBMovieDetails>;
   fetchTv(id: number): Promise<TmdBTvDetails>;
   fetchGenres(kind: "movie" | "tv"): Promise<TmdBGenre[]>;
+  health(): Promise<void>;
 }
 
 // Genre lists are small and stable; cache them for an hour so search results
@@ -118,6 +119,10 @@ export function createTmdBClient(config: TmdBApiConfig, fetchImpl: UpstreamFetch
 
       genreCache.set(kind, { at: Date.now(), genres });
       return genres;
+    },
+
+    async health(): Promise<void> {
+      await request("/configuration?language=en-US");
     },
   };
 }
