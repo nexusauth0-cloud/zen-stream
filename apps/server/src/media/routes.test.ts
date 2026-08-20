@@ -15,6 +15,8 @@ import { createApp } from "../app.js";
 import { ProviderRegistry } from "../providers/registry.js";
 import { createTmdBProvider } from "../providers/tmdb/provider.js";
 import { resetTmdBGenreCache } from "../providers/tmdb/client.js";
+import { createSpunProvider } from "../providers/spun/provider.js";
+import { createDaratechProvider } from "../providers/daratech/provider.js";
 import type { MediaProvider } from "../providers/types.js";
 
 function fakeClient(overrides: Partial<MediaUpstreamClient> = {}): MediaUpstreamClient {
@@ -97,11 +99,13 @@ function fakeClient(overrides: Partial<MediaUpstreamClient> = {}): MediaUpstream
       runtime: 162,
       genre: "Action, Adventure, Fantasy",
       poster: null,
+      backdrop: null,
       country: "United States",
       rating: 7.9,
       hasResource: true,
       language: "English",
       staff: [],
+      externalIds: { moviebox: null, spun: null, daratech: null, imdb: null, tmdb: null },
     })),
     fetchSeason: vi.fn<() => Promise<MediaSeasonResponse>>(async () => ({
       seasons: [
@@ -518,5 +522,371 @@ describe("secondary metadata fallback (TMDB)", () => {
 
     expect(response.status).toBe(502);
     expect(response.body.error.code).toBe("MEDIA_UPSTREAM_ERROR");
+  });
+});
+
+/* ── Multi-provider fallback (Spün + DaraTech) ─────────────────────────── */
+
+const SPUN_SEARCH_FIXTURE = {
+  page: 1,
+  total_pages: 1,
+  total_results: 2,
+  results: [
+    {
+      spun_id: "the-matrix-387273",
+      type: "movie",
+      title: "The Matrix",
+      year: 1999,
+      rating: 8.3,
+      poster: "https://image.tmdb.org/t/p/w342/x.jpg",
+    },
+    {
+      spun_id: "the-matrix-reloaded-958850",
+      type: "movie",
+      title: "The Matrix Reloaded",
+      year: 2003,
+      rating: 7.1,
+      poster: "https://image.tmdb.org/t/p/w342/y.jpg",
+    },
+  ],
+};
+
+const DARATECH_SEARCH_FIXTURE = {
+  items: [
+    {
+      id: "NTgyMzEzNTc2ODIyNjcxMzM4NDo6OnBpY2E",
+      subjectId: "NTgyMzEzNTc2ODIyNjcxMzM4NDo6OnBpY2E",
+      title: "The Matrix",
+      cover: "https://pbcdn.aoneroom.com/image/m.jpg",
+      year: 1999,
+      rating: 8.0,
+      genres: ["Action"],
+      subjectType: 1,
+      language: "English",
+    },
+    {
+      id: "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDo6OnBpY2E",
+      subjectId: "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDo6OnBpY2E",
+      title: "Sense8",
+      cover: "https://pbcdn.aoneroom.com/image/s.jpg",
+      year: 2015,
+      rating: 8.2,
+      genres: ["Sci-Fi"],
+      subjectType: 2,
+      language: "English",
+    },
+  ],
+};
+
+const SPUN_INFO_FIXTURE = {
+  spun_id: "spider-man-brand-new-day-824972",
+  type: "movie",
+  title: "Spider-Man: Brand New Day",
+  year: 2026,
+  rating: 7.9,
+  overview: "The web-slinger returns.",
+  status: "Released",
+  runtime: 132,
+  genres: ["Action", "Adventure"],
+  poster: "https://image.tmdb.org/t/p/w500/p.jpg",
+  backdrop: "https://image.tmdb.org/t/p/w1280/b.jpg",
+  cast: [{ name: "Tom Holland", character: "Spider-Man", image: "https://img/t.jpg" }],
+};
+
+const SPUN_RESOLVE_FIXTURE = {
+  spun_id: "spider-man-brand-new-day-824972",
+  type: "movie",
+  title: "Spider-Man: Brand New Day",
+  year: 2026,
+  rating: 7.9,
+  poster: null,
+};
+
+function secondaryFetch(fixtures: Record<string, unknown>) {
+  return vi.fn(async (url: string) => {
+    for (const [suffix, body] of Object.entries(fixtures)) {
+      if (url.includes(suffix)) return new Response(JSON.stringify(body), { status: 200 });
+    }
+    throw new Error(`unexpected url ${url}`);
+  });
+}
+
+function registryWithSecondaries(
+  primary: MediaProvider,
+  spunFetchImpl: ReturnType<typeof secondaryFetch>,
+  daratechFetchImpl: ReturnType<typeof secondaryFetch>,
+): ProviderRegistry {
+  const registry = new ProviderRegistry();
+  registry.registerMetadata(primary);
+  registry.registerSecondary(createSpunProvider({ baseUrl: "https://media.byspun.xyz/v1" }, spunFetchImpl));
+  registry.registerSecondary(
+    createDaratechProvider(
+      { apiKey: "dara-test-key", apiRoot: "https://apimovie.runflix.name.ng/v1" },
+      daratechFetchImpl,
+    ),
+  );
+  return registry;
+}
+
+describe("multi-provider search fallback", () => {
+  it("merges Spün and DaraTech results and deduplicates exact title duplicates", async () => {
+    const app = createApp({
+      providers: registryWithSecondaries(
+        failingPrimary(),
+        secondaryFetch({ "/search?": SPUN_SEARCH_FIXTURE }),
+        secondaryFetch({ "/search?": DARATECH_SEARCH_FIXTURE }),
+      ),
+    });
+
+    const response = await request(app).get("/api/v1/media/search?q=the%20matrix");
+
+    expect(response.status).toBe(200);
+    // The Matrix (duplicate across providers) appears once — the Spün item
+    // wins because it came first; The Matrix Reloaded and Sense8 are kept.
+    const titles = response.body.items.map((item: { title: string }) => item.title);
+    expect(titles).toEqual(["The Matrix", "The Matrix Reloaded", "Sense8"]);
+    expect(response.body.pager.totalCount).toBe(3);
+  });
+
+  it("uses the primary search success and never consults secondaries", async () => {
+    const spunFetch = vi.fn(async () => {
+      throw new Error("spun must not be called");
+    });
+    const daratechFetch = vi.fn(async () => {
+      throw new Error("daratech must not be called");
+    });
+    const app = createApp({
+      providers: registryWithSecondaries(
+        failingPrimary({
+          fetchSearch: async () => ({
+            items: [
+              {
+                subjectId: "1654274595068805784",
+                type: "movie",
+                title: "Avatar [Hindi]",
+                releaseDate: "2009-12-18",
+                duration: "2h 42m",
+                genre: "Action",
+                poster: null,
+                rating: 7.9,
+                language: null,
+                country: null,
+              },
+            ],
+            pager: { hasMore: false, page: 1, perPage: 20, totalCount: 1 },
+          }),
+        }),
+        spunFetch,
+        daratechFetch,
+      ),
+    });
+
+    const response = await request(app).get("/api/v1/media/search?q=avatar");
+
+    expect(response.status).toBe(200);
+    expect(response.body.items).toHaveLength(1);
+    expect(spunFetch).not.toHaveBeenCalled();
+    expect(daratechFetch).not.toHaveBeenCalled();
+  });
+
+  it("surfaces the primary failure when every secondary fails too", async () => {
+    const spunFetch = vi.fn(async () => {
+      throw new TypeError("spun down");
+    });
+    const daratechFetch = vi.fn(async () => {
+      throw new TypeError("daratech down");
+    });
+    const app = createApp({
+      providers: registryWithSecondaries(failingPrimary(), spunFetch, daratechFetch),
+    });
+
+    const response = await request(app).get("/api/v1/media/search?q=matrix");
+
+    expect(response.status).toBe(502);
+    expect(response.body.error.code).toBe("MEDIA_UPSTREAM_ERROR");
+  });
+});
+
+describe("multi-provider info fallback", () => {
+  it("resolves a MovieBox id through Spün when the primary info fails", async () => {
+    const app = createApp({
+      providers: registryWithSecondaries(
+        failingPrimary(),
+        secondaryFetch({
+          "/utility/resolve/moviebox?id=6026412232966389904": SPUN_RESOLVE_FIXTURE,
+          "/info/spider-man-brand-new-day-824972": SPUN_INFO_FIXTURE,
+        }),
+        secondaryFetch({}),
+      ),
+    });
+
+    const response = await request(app).get("/api/v1/media/info/6026412232966389904");
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      subjectId: "6026412232966389904",
+      type: "movie",
+      title: "Spider-Man: Brand New Day",
+      backdrop: "https://image.tmdb.org/t/p/w1280/b.jpg",
+      // Fallback metadata never implies playability.
+      hasResource: false,
+    });
+    expect(response.body.externalIds).toMatchObject({
+      moviebox: "6026412232966389904",
+      spun: "spider-man-brand-new-day-824972",
+    });
+  });
+
+  it("falls back to DaraTech detail by base64-translating the MovieBox id", async () => {
+    const app = createApp({
+      providers: registryWithSecondaries(
+        failingPrimary(),
+        secondaryFetch({}),
+        secondaryFetch({
+          "/detail/NjAyNjQxMjIzMjk2NjM4OTkwNDo6OnBpY2E": {
+            id: "NjAyNjQxMjIzMjk2NjM4OTkwNDo6OnBpY2E",
+            subjectId: "NjAyNjQxMjIzMjk2NjM4OTkwNDo6OnBpY2E",
+            title: "Spider-Man: Brand New Day",
+            cover: "https://pbcdn.aoneroom.com/image/x.jpg",
+            backdrop: "https://pbcdn.aoneroom.com/image/b.jpg",
+            year: 2026,
+            rating: 7.9,
+            genres: ["Action"],
+            description: "The web-slinger returns.",
+            subjectType: 1,
+            language: "English",
+            country: "United States",
+            cast: [],
+            stills: [],
+            related: [],
+            trailer: null,
+          },
+        }),
+      ),
+    });
+
+    const response = await request(app).get("/api/v1/media/info/6026412232966389904");
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      subjectId: "6026412232966389904",
+      title: "Spider-Man: Brand New Day",
+      hasResource: false,
+    });
+    expect(response.body.externalIds.daratech).toBe("NjAyNjQxMjIzMjk2NjM4OTkwNDo6OnBpY2E");
+  });
+
+  it("surfaces the primary info failure when all secondaries fail", async () => {
+    const app = createApp({
+      providers: registryWithSecondaries(
+        failingPrimary(),
+        secondaryFetch({}),
+        secondaryFetch({}),
+      ),
+    });
+
+    const response = await request(app).get("/api/v1/media/info/6026412232966389904");
+
+    expect(response.status).toBe(502);
+    expect(response.body.error.code).toBe("MEDIA_UPSTREAM_ERROR");
+  });
+});
+
+describe("info enrichment (primary succeeds)", () => {
+  function enrichedPrimary(): MediaProvider {
+    return failingPrimary({
+      fetchInfo: async (subjectId: string) => ({
+        subjectId,
+        type: "movie",
+        title: "Spider-Man: Brand New Day",
+        description: "The web-slinger returns.",
+        releaseDate: null,
+        runtime: 132,
+        genre: "Action",
+        poster: "https://pbcdn.example/poster.jpg",
+        backdrop: null,
+        country: null,
+        rating: 7.9,
+        hasResource: true,
+        language: "English",
+        staff: [],
+        externalIds: { moviebox: null, spun: null, daratech: null, imdb: null, tmdb: null },
+      }),
+    });
+  }
+
+  it("fills missing backdrop from Spün without touching primary data or playability", async () => {
+    const spunFetch = secondaryFetch({
+      "/utility/resolve/moviebox?id=6026412232966389904": SPUN_RESOLVE_FIXTURE,
+      "/info/spider-man-brand-new-day-824972": SPUN_INFO_FIXTURE,
+    });
+    const app = createApp({
+      providers: registryWithSecondaries(enrichedPrimary(), spunFetch, secondaryFetch({})),
+    });
+
+    const response = await request(app).get("/api/v1/media/info/6026412232966389904");
+
+    expect(response.status).toBe(200);
+    expect(response.body.backdrop).toBe("https://image.tmdb.org/t/p/w1280/b.jpg");
+    // Primary fields are never overwritten by secondary data...
+    expect(response.body.poster).toBe("https://pbcdn.example/poster.jpg");
+    expect(response.body.genre).toBe("Action");
+    // ...and the primary's playback truth always wins.
+    expect(response.body.hasResource).toBe(true);
+    expect(response.body.subjectId).toBe("6026412232966389904");
+  });
+
+  it("caches the enriched result so repeat views do not re-hit secondaries", async () => {
+    const spunFetch = secondaryFetch({
+      "/utility/resolve/moviebox?id=6026412232966389904": SPUN_RESOLVE_FIXTURE,
+      "/info/spider-man-brand-new-day-824972": SPUN_INFO_FIXTURE,
+    });
+    const app = createApp({
+      providers: registryWithSecondaries(enrichedPrimary(), spunFetch, secondaryFetch({})),
+    });
+
+    await request(app).get("/api/v1/media/info/6026412232966389904");
+    await request(app).get("/api/v1/media/info/6026412232966389904");
+
+    const spunInfoCalls = spunFetch.mock.calls.filter(([url]) =>
+      String(url).includes("/info/spider-man-brand-new-day-824972"),
+    );
+    expect(spunInfoCalls).toHaveLength(1);
+  });
+
+  it("never lets enrichment degrade the primary answer when secondaries fail", async () => {
+    const app = createApp({
+      providers: registryWithSecondaries(
+        enrichedPrimary(),
+        secondaryFetch({}),
+        secondaryFetch({}),
+      ),
+    });
+
+    const response = await request(app).get("/api/v1/media/info/6026412232966389904");
+
+    expect(response.status).toBe(200);
+    expect(response.body.title).toBe("Spider-Man: Brand New Day");
+    expect(response.body.hasResource).toBe(true);
+    expect(response.body.backdrop).toBeNull();
+  });
+
+  it("keeps metadata success distinct from playback availability", async () => {
+    const app = createApp({
+      providers: registryWithSecondaries(
+        enrichedPrimary(),
+        secondaryFetch({
+          "/utility/resolve/moviebox?id=6026412232966389904": SPUN_RESOLVE_FIXTURE,
+          "/info/spider-man-brand-new-day-824972": SPUN_INFO_FIXTURE,
+        }),
+        secondaryFetch({}),
+      ),
+    });
+
+    const response = await request(app).get("/api/v1/media/info/6026412232966389904");
+
+    // Rich metadata exists, but playback truth comes from the primary only.
+    expect(response.body.backdrop).not.toBeNull();
+    expect(response.body.hasResource).toBe(true);
   });
 });

@@ -1,12 +1,16 @@
 import { Router } from "express";
 import type { Request, Response, NextFunction } from "express";
 import { mediaSearchParamsSchema, mediaStreamParamsSchema } from "@zen-stream/contracts";
+import type { MediaInfo, MediaSearchResponse } from "@zen-stream/contracts";
 import { ZodError } from "zod";
 import { ApiError } from "../errors.js";
 import { UpstreamHttpError } from "./client.js";
 import type { MediaUpstreamClient } from "./client.js";
 import { ProviderRegistry } from "../providers/registry.js";
 import { createClientProvider } from "../providers/client-provider.js";
+import { dedupeSearchItems } from "../providers/matching.js";
+import type { TtlCache } from "../providers/cache.js";
+import { createTtlCache } from "../providers/cache.js";
 import type { MediaProvider, PlaybackProvider, SecondaryMetadataProvider } from "../providers/types.js";
 
 function parseSubjectId(subjectId: string | undefined): string {
@@ -47,25 +51,153 @@ function isUpstreamFailure(error: unknown): boolean {
 }
 
 /**
- * Runs `run` against the primary provider and, when the primary fails with
- * an upstream failure and a secondary metadata provider is registered,
- * re-runs it against the secondary. Only the secondary's *success* replaces
- * the primary outcome — any secondary failure rethrows the original primary
- * failure so error semantics stay honest.
+ * Merges several secondary search responses into one result set.
+ * Duplicates are removed conservatively — only exact normalized title+type
+ * duplicates (never low-confidence merges); the first occurrence wins.
  */
-function withFallback<T>(
-  run: (provider: MediaProvider | SecondaryMetadataProvider) => Promise<T>,
+function mergeSearchResponses(responses: MediaSearchResponse[]): MediaSearchResponse {
+  const items = dedupeSearchItems(responses.flatMap((response) => response.items));
+  const first = responses[0];
+  return {
+    items,
+    pager: {
+      hasMore: responses.some((response) => response.pager.hasMore),
+      page: first?.pager.page ?? 1,
+      perPage: first?.pager.perPage ?? 20,
+      totalCount: items.length,
+    },
+  };
+}
+
+/**
+ * Search fallback: the primary search failure (e.g. an upstream 406/502)
+ * falls back to every secondary provider; all secondary successes are
+ * merged (deduplicated), and the original failure is rethrown only when no
+ * secondary answers. A genuine primary zero-result success is never
+ * overridden.
+ */
+async function searchWithFallback(
+  run: (provider: MediaProvider | SecondaryMetadataProvider) => Promise<MediaSearchResponse>,
   primary: MediaProvider,
-  secondary: SecondaryMetadataProvider | null,
-): Promise<T> {
-  return run(primary).catch((primaryError: unknown) => {
-    if (!isUpstreamFailure(primaryError) || !secondary) {
+  secondaries: SecondaryMetadataProvider[],
+): Promise<MediaSearchResponse> {
+  try {
+    return await run(primary);
+  } catch (primaryError: unknown) {
+    if (!isUpstreamFailure(primaryError) || secondaries.length === 0) {
       throw primaryError;
     }
-    return run(secondary).catch(() => {
+    const successes: MediaSearchResponse[] = [];
+    for (const secondary of secondaries) {
+      try {
+        successes.push(await run(secondary));
+      } catch {
+        // Try the next secondary.
+      }
+    }
+    if (successes.length === 0) {
       throw primaryError;
-    });
-  });
+    }
+    return mergeSearchResponses(successes);
+  }
+}
+
+/* ── Info enrichment ──────────────────────────────────────────────────── */
+
+/** Enrichment is worthwhile when the primary left these fields empty. */
+function needsEnrichment(info: MediaInfo): boolean {
+  return info.backdrop == null || info.releaseDate == null || info.description == null;
+}
+
+function mergeExternalIds(primary: MediaInfo["externalIds"], candidate: MediaInfo["externalIds"]) {
+  return {
+    moviebox: primary.moviebox ?? candidate.moviebox,
+    spun: primary.spun ?? candidate.spun,
+    daratech: primary.daratech ?? candidate.daratech,
+    imdb: primary.imdb ?? candidate.imdb,
+    tmdb: primary.tmdb ?? candidate.tmdb,
+  };
+}
+
+/**
+ * Conservative metadata enrichment: primary-provider data wins for every
+ * field it already has; only missing fields are filled from a secondary
+ * provider. The canonical identity (subjectId, title, type) and the
+ * primary's playback truth (`hasResource`) are never touched — metadata
+ * existence never implies playability.
+ */
+function enrichInfo(primary: MediaInfo, candidate: MediaInfo): MediaInfo {
+  return {
+    subjectId: primary.subjectId,
+    type: primary.type,
+    title: primary.title,
+    description: primary.description ?? candidate.description,
+    releaseDate: primary.releaseDate ?? candidate.releaseDate,
+    runtime: primary.runtime ?? candidate.runtime,
+    genre: primary.genre ?? candidate.genre,
+    poster: primary.poster ?? candidate.poster,
+    backdrop: primary.backdrop ?? candidate.backdrop,
+    country: primary.country ?? candidate.country,
+    rating: primary.rating ?? candidate.rating,
+    hasResource: primary.hasResource,
+    language: primary.language ?? candidate.language,
+    staff: primary.staff.length > 0 ? primary.staff : candidate.staff,
+    externalIds: mergeExternalIds(primary.externalIds, candidate.externalIds),
+  };
+}
+
+/** Cached so repeated detail views don't re-hit every secondary provider. */
+const ENRICHMENT_TTL_MS = 10 * 60 * 1000;
+
+/**
+ * Details fallback + enrichment:
+ *  - primary succeeds → conservatively fill missing fields from the first
+ *    secondary that answers (cached per subject); failures never degrade
+ *    the primary answer
+ *  - primary fails upstream → first secondary success replaces it
+ *  - everything fails → the original primary failure surfaces
+ */
+async function infoWithFallback(
+  run: (provider: MediaProvider | SecondaryMetadataProvider) => Promise<MediaInfo>,
+  primary: MediaProvider,
+  secondaries: SecondaryMetadataProvider[],
+  cache: TtlCache<MediaInfo>,
+): Promise<MediaInfo> {
+  try {
+    const info = await run(primary);
+    if (!needsEnrichment(info) || secondaries.length === 0) {
+      return info;
+    }
+    const cached = cache.get(info.subjectId);
+    if (cached) return cached;
+    for (const secondary of secondaries) {
+      try {
+        const enriched = enrichInfo(info, await run(secondary));
+        cache.set(info.subjectId, enriched);
+        return enriched;
+      } catch {
+        // Try the next secondary; never let enrichment break the primary.
+      }
+    }
+    return info;
+  } catch (primaryError: unknown) {
+    if (!isUpstreamFailure(primaryError) || secondaries.length === 0) {
+      throw primaryError;
+    }
+    for (const secondary of secondaries) {
+      try {
+        return await run(secondary);
+      } catch {
+        // Try the next secondary.
+      }
+    }
+    throw primaryError;
+  }
+}
+
+export interface MediaRouterOptions {
+  /** Test hook: inject an enrichment cache (defaults to a fresh TTL cache). */
+  enrichmentCache?: TtlCache<MediaInfo>;
 }
 
 /**
@@ -76,13 +208,18 @@ function withFallback<T>(
  * Providers return canonical contract payloads, so malformed or stale
  * upstream data surfaces as a consistent 502 rather than leaking into the
  * client. An injected client (tests) is adapted through the same provider
- * interfaces as the env-configured registry providers.
+ * interfaces as the env-configured registry providers. Secondary metadata
+ * providers (Spün, DaraTech, TMDB) are consulted only when the primary
+ * fails upstream — a successful primary answer, including a genuine
+ * zero-result search, is never overridden.
  */
 export function createMediaRouter(
   client?: MediaUpstreamClient,
   providers: ProviderRegistry = new ProviderRegistry(),
+  options: MediaRouterOptions = {},
 ): Router {
   const router = Router();
+  const enrichmentCache = options.enrichmentCache ?? createTtlCache<MediaInfo>(ENRICHMENT_TTL_MS);
 
   function resolveMedia(): MediaProvider {
     if (client) return createClientProvider(client);
@@ -160,10 +297,10 @@ export function createMediaRouter(
       if (!params.success) {
         throw new ApiError(400, "VALIDATION_ERROR", "A non-empty search query is required.");
       }
-      const result = await withFallback(
+      const result = await searchWithFallback(
         (provider) => provider.fetchSearch(params.data),
         media,
-        providers.getSecondary(),
+        providers.getSecondaries(),
       );
       res.json(result);
     }),
@@ -173,10 +310,11 @@ export function createMediaRouter(
     "/info/:subjectId",
     handle(async (media, req, res) => {
       const subjectId = parseSubjectId(firstParam(req.params.subjectId));
-      const result = await withFallback(
+      const result = await infoWithFallback(
         (provider) => provider.fetchInfo(subjectId),
         media,
-        providers.getSecondary(),
+        providers.getSecondaries(),
+        enrichmentCache,
       );
       res.json(result);
     }),
