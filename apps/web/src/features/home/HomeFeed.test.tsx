@@ -295,6 +295,13 @@ describe("HomeFeed", () => {
 });
 
 describe("collectUpcoming", () => {
+  /** UTC date-only string offset from today; keeps "future" fixtures future forever. */
+  function isoDateFromToday(offsetDays: number): string {
+    const date = new Date();
+    date.setUTCDate(date.getUTCDate() + offsetDays);
+    return date.toISOString().slice(0, 10);
+  }
+
   function upcomingItem(subjectId: string, releaseDate: string): MediaSubjectSummary {
     return {
       subjectId,
@@ -313,6 +320,8 @@ describe("collectUpcoming", () => {
   }
 
   it("collects only future releases, deduplicated and date-ordered", () => {
+    const later = isoDateFromToday(20);
+    const sooner = isoDateFromToday(1);
     const feed: MediaHomeFeed = {
       total: 2,
       rows: [
@@ -322,9 +331,9 @@ describe("collectUpcoming", () => {
           type: null,
           total: 3,
           subjects: [
-            upcomingItem("later", "2026-09-01"),
-            upcomingItem("sooner", "2026-08-20"),
-            upcomingItem("released", "2026-08-01"),
+            upcomingItem("later", later),
+            upcomingItem("sooner", sooner),
+            upcomingItem("released", isoDateFromToday(-1)),
           ],
         },
         {
@@ -332,7 +341,7 @@ describe("collectUpcoming", () => {
           opId: "op-b",
           type: null,
           total: 1,
-          subjects: [upcomingItem("sooner", "2026-08-20")],
+          subjects: [upcomingItem("sooner", sooner)],
         },
       ],
     };
@@ -349,7 +358,7 @@ describe("collectUpcoming", () => {
           type: null,
           total: 2,
           subjects: [
-            upcomingItem("released", "2026-08-01"),
+            upcomingItem("released", isoDateFromToday(-1)),
             { ...upcomingItem("nodate", ""), releaseDate: null },
           ],
         },
