@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMediaInfo, useSeason } from "../api/hooks";
+import { infoWithCachedReleaseDate, knownUpcoming } from "../api/subjectCache";
+import { ComingSoonDetails } from "../components/media/ComingSoonDetails";
 import { DetailsHero } from "../components/media/DetailsHero";
 import { RelatedRail } from "../components/media/RelatedRail";
 import { EmptyState, ErrorState } from "../components/feedback/States";
@@ -10,7 +12,8 @@ import "./SeriesDetailPage.css";
 
 export function SeriesDetailPage() {
   const { subjectId } = useParams<{ subjectId: string }>();
-  const info = useMediaInfo(subjectId);
+  const infoState = useMediaInfo(subjectId);
+  const info = infoState.data ? infoWithCachedReleaseDate(infoState.data) : null;
   const seasons = useSeason(subjectId);
   const [activeSeason, setActiveSeason] = useState(1);
 
@@ -21,7 +24,7 @@ export function SeriesDetailPage() {
 
   const current = seasonList.find((season) => season.season === activeSeason) ?? seasonList[0];
 
-  if (info.status === "loading") {
+  if (infoState.status === "loading") {
     return (
       <section className="zs-series-details" aria-label="Loading series details">
         <div className="zs-series-details__hero-skeleton" />
@@ -30,19 +33,27 @@ export function SeriesDetailPage() {
     );
   }
 
-  if (info.status === "error") {
+  if (infoState.status === "error") {
+    const upcoming = knownUpcoming(subjectId ?? "");
+    if (upcoming) {
+      return (
+        <section className="zs-series-details">
+          <ComingSoonDetails item={upcoming} />
+        </section>
+      );
+    }
     return (
       <section className="zs-series-details">
         <ErrorState
           title="This series is unavailable right now"
-          message={info.error ?? undefined}
-          onRetry={info.retry}
+          message={infoState.error ?? undefined}
+          onRetry={infoState.retry}
         />
       </section>
     );
   }
 
-  if (!info.data) {
+  if (!info) {
     return (
       <section className="zs-series-details">
         <EmptyState title="Series not found" message="This title is not in the catalog." />
@@ -52,11 +63,11 @@ export function SeriesDetailPage() {
 
   return (
     <section className="zs-series-details" aria-labelledby="zs-series-details-title">
-      <DetailsHero info={info.data} />
+      <DetailsHero info={info} />
       <div className="zs-series-details__content">
         <aside className="zs-series-details__poster">
-          {info.data.poster ? (
-            <img className="zs-series-details__poster-image" src={info.data.poster} alt="" />
+          {info.poster ? (
+            <img className="zs-series-details__poster-image" src={info.poster} alt="" />
           ) : (
             <div className="zs-series-details__poster-fallback">
               <ZenIcon name="film" size={48} />
@@ -65,14 +76,14 @@ export function SeriesDetailPage() {
         </aside>
         <div className="zs-series-details__about">
           <h2 id="zs-series-details-title" className="zs-series-details__heading">
-            About {info.data.title}
+            About {info.title}
           </h2>
           <p className="zs-series-details__description">
-            {info.data.description ?? "No description available for this title yet."}
+            {info.description ?? "No description available for this title yet."}
           </p>
-          {info.data.staff.length > 0 && (
+          {info.staff.length > 0 && (
             <ul className="zs-series-details__staff">
-              {info.data.staff.map((member, index) => (
+              {info.staff.map((member, index) => (
                 <li key={`${index}-${member.role}-${member.name}`} className="zs-series-details__staff-member">
                   <span className="zs-series-details__staff-name">{member.name}</span>
                   <span className="zs-series-details__staff-role">{member.role}</span>
@@ -83,7 +94,7 @@ export function SeriesDetailPage() {
         </div>
       </div>
 
-      <RelatedRail subjectId={info.data.subjectId} kind="series" />
+      <RelatedRail subjectId={info.subjectId} kind="series" />
 
       <section className="zs-series-details__episodes" aria-labelledby="zs-series-episodes-title">
         <div className="zs-series-details__episodes-head">
@@ -123,7 +134,7 @@ export function SeriesDetailPage() {
                 current.episodes.map((episode) => (
                   <Link
                     key={episode.episode}
-                    to={`/watch/${info.data?.subjectId}?se=${current.season}&ep=${episode.episode}`}
+                    to={`/watch/${info.subjectId}?se=${current.season}&ep=${episode.episode}`}
                     className="zs-episode"
                   >
                     <span className="zs-episode__number">{episode.episode}</span>

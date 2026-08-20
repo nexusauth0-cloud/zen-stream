@@ -1,0 +1,16 @@
+.zs-coming-soon-details {
+  height: auto;
+  min-height: var(--zs-hero-details-h);
+}
+
+.zs-coming-soon-details__release {
+  display: flex;
+  align-items: center;
+  gap: var(--zs-space-2);
+  margin: 0 0 var(--zs-space-3);
+  color: var(--zs-color-text-muted);
+  font-size: var(--zs-font-size-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}

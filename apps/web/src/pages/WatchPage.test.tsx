@@ -151,7 +151,7 @@ describe("WatchPage availability guard", () => {
     expect(
       await screen.findByRole("heading", { name: "Coming Soon" }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/arrives Sep 1, 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/Available Sep 1, 2026/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Back to details" })).toHaveAttribute(
       "href",

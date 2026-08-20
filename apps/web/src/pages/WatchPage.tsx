@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import type { MediaInfo } from "@zen-stream/contracts";
+import type { MediaSubjectSummary } from "@zen-stream/contracts";
 import { formatMediaReleaseDate, getMediaAvailability } from "@zen-stream/contracts";
 import { useMediaInfo, useStream } from "../api/hooks";
+import { infoWithCachedReleaseDate, knownUpcoming, summaryFromInfo } from "../api/subjectCache";
 import { ButtonLink } from "../components/ButtonLink/ButtonLink";
 import { ErrorState } from "../components/feedback/States";
 import { ZenIcon } from "../components/Icon/icons";
@@ -18,7 +19,29 @@ export function WatchPage() {
   const ep = Number(searchParams.get("ep") ?? 0);
 
   const infoState = useMediaInfo(subjectId);
-  const { status, data, error, retry } = useStream({ subjectId, se, ep });
+
+  // Honest availability guard: upcoming or non-playable titles never reach
+  // the player. When the info fetch itself fails, the guard falls back to
+  // session-cached metadata so a known-upcoming title still never invokes
+  // playback — an upstream blip must never block genuinely playable titles.
+  const guard = useMemo(() => {
+    if (infoState.status === "success" && infoState.data) {
+      const info = infoWithCachedReleaseDate(infoState.data);
+      const availability = getMediaAvailability({
+        releaseDate: info.releaseDate,
+        hasResource: info.hasResource,
+      });
+      if (availability === "available") return null;
+      return availability === "coming-soon" ? "coming-soon" : "unavailable";
+    }
+    if (infoState.status === "error" && knownUpcoming(subjectId ?? "")) {
+      return "coming-soon";
+    }
+    return null;
+  }, [infoState, subjectId]);
+
+  const guardBlocks = guard === "coming-soon" || guard === "unavailable";
+  const { status, data, error, retry } = useStream({ subjectId, se, ep }, !guardBlocks);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playerStatus, setPlayerStatus] = useState<PlayerStatus>("loading");
 
@@ -31,21 +54,11 @@ export function WatchPage() {
     if (playerStatus === "loading") setPlayerStatus("ready");
   }, [playerStatus]);
 
-  // Honest availability guard: upcoming or non-playable titles never reach
-  // the player. The guard only intercepts when the info fetch succeeds —
-  // an upstream blip must never block playable titles.
-  const guard = useMemo(() => {
-    if (infoState.status !== "success" || !infoState.data) return null;
-    const availability = getMediaAvailability({
-      releaseDate: infoState.data.releaseDate,
-      hasResource: infoState.data.hasResource,
-    });
-    if (availability === "available") return null;
-    return availability === "coming-soon" ? "coming-soon" : "unavailable";
-  }, [infoState]);
-
   if (guard === "coming-soon") {
-    return <ComingSoonGuard info={infoState.data!} />;
+    const upcoming = infoState.data
+      ? summaryFromInfo(infoWithCachedReleaseDate(infoState.data))
+      : knownUpcoming(subjectId ?? "");
+    return upcoming ? <ComingSoonGuard item={upcoming} /> : null;
   }
 
   if (guard === "unavailable") {
@@ -169,9 +182,9 @@ export function WatchPage() {
   );
 }
 
-function ComingSoonGuard({ info }: { info: MediaInfo }) {
-  const detailUrl = info.type === "movie" ? `/movie/${info.subjectId}` : `/series/${info.subjectId}`;
-  const date = formatMediaReleaseDate(info.releaseDate, { year: true }) ?? "soon";
+function ComingSoonGuard({ item }: { item: MediaSubjectSummary }) {
+  const detailUrl = item.type === "movie" ? `/movie/${item.subjectId}` : `/series/${item.subjectId}`;
+  const date = formatMediaReleaseDate(item.releaseDate, { year: true });
   return (
     <section className="zs-player" aria-label="Coming soon">
       <div className="zs-player__frame">
@@ -179,27 +192,10 @@ function ComingSoonGuard({ info }: { info: MediaInfo }) {
           <ZenIcon name="calendar" size={32} />
           <h1 className="zs-player__message-title">Coming Soon</h1>
           <p className="zs-player__message-text">
-            {info.title} is not available to stream yet — it arrives {date}.
+            {date ? `Available ${date}` : `${item.title} is not available to stream yet.`}
           </p>
           <div className="zs-player__guard-actions">
-            <WatchlistButton
-              item={{
-                subjectId: info.subjectId,
-                type: info.type,
-                title: info.title,
-                poster: info.poster,
-                hasResource: info.hasResource,
-                description: info.description,
-                releaseDate: info.releaseDate,
-                runtime: info.runtime,
-                genre: info.genre,
-                rating: info.rating,
-                language: info.language,
-                country: info.country,
-              }}
-              label="Save"
-              savedLabel="Saved"
-            />
+            <WatchlistButton item={item} label="Save" savedLabel="Saved" />
             <ButtonLink to={detailUrl} variant="secondary" size="sm">
               Back to details
             </ButtonLink>

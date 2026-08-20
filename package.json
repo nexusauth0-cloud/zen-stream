@@ -15,7 +15,7 @@
     "dev": "concurrently -k -n web,server -c blue,green \"npm run dev -w @zen-stream/web\" \"npm run dev -w @zen-stream/server\"",
     "dev:web": "npm run dev -w @zen-stream/web",
     "dev:server": "npm run dev -w @zen-stream/server",
-    "build": "npm run build -w @zen-stream/web && npm run build -w @zen-stream/server",
+    "build": "npm run build -w @zen-stream/contracts && npm run build -w @zen-stream/web && npm run build -w @zen-stream/server",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "test": "vitest run"

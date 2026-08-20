@@ -1,5 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useMediaInfo } from "../api/hooks";
+import { infoWithCachedReleaseDate, knownUpcoming } from "../api/subjectCache";
+import { ComingSoonDetails } from "../components/media/ComingSoonDetails";
 import { DetailsHero } from "../components/media/DetailsHero";
 import { RelatedRail } from "../components/media/RelatedRail";
 import { EmptyState, ErrorState } from "../components/feedback/States";
@@ -10,6 +12,7 @@ import "./DetailsPage.css";
 export function MoviePage() {
   const { subjectId } = useParams<{ subjectId: string }>();
   const { status, data, error, retry } = useMediaInfo(subjectId);
+  const info = data ? infoWithCachedReleaseDate(data) : null;
 
   if (status === "loading") {
     return (
@@ -21,6 +24,14 @@ export function MoviePage() {
   }
 
   if (status === "error") {
+    const upcoming = knownUpcoming(subjectId ?? "");
+    if (upcoming) {
+      return (
+        <section className="zs-details">
+          <ComingSoonDetails item={upcoming} />
+        </section>
+      );
+    }
     return (
       <section className="zs-details">
         <ErrorState
@@ -32,7 +43,7 @@ export function MoviePage() {
     );
   }
 
-  if (!data) {
+  if (!info) {
     return (
       <section className="zs-details">
         <EmptyState title="Movie not found" message="This title is not in the catalog." />
@@ -42,11 +53,11 @@ export function MoviePage() {
 
   return (
     <section className="zs-details" aria-labelledby="zs-details-title">
-      <DetailsHero info={data} />
+      <DetailsHero info={info} />
       <div className="zs-details__content">
         <aside className="zs-details__poster">
-          {data.poster ? (
-            <img className="zs-details__poster-image" src={data.poster} alt="" />
+          {info.poster ? (
+            <img className="zs-details__poster-image" src={info.poster} alt="" />
           ) : (
             <div className="zs-details__poster-fallback">
               <ZenIcon name="film" size={48} />
@@ -55,14 +66,14 @@ export function MoviePage() {
         </aside>
         <div className="zs-details__about">
           <h2 id="zs-details-title" className="zs-details__heading">
-            About {data.title}
+            About {info.title}
           </h2>
           <p className="zs-details__description">
-            {data.description ?? "No description available for this title yet."}
+            {info.description ?? "No description available for this title yet."}
           </p>
-          {data.staff.length > 0 && (
+          {info.staff.length > 0 && (
             <ul className="zs-details__staff">
-              {data.staff.map((member, index) => (
+              {info.staff.map((member, index) => (
                 <li key={`${index}-${member.role}-${member.name}`} className="zs-details__staff-member">
                   <span className="zs-details__staff-name">{member.name}</span>
                   <span className="zs-details__staff-role">{member.role}</span>
@@ -72,7 +83,7 @@ export function MoviePage() {
           )}
         </div>
       </div>
-      <RelatedRail subjectId={data.subjectId} kind="movie" />
+      <RelatedRail subjectId={info.subjectId} kind="movie" />
     </section>
   );
 }

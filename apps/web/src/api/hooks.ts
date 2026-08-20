@@ -8,6 +8,7 @@ import type {
   MediaStreamResponse,
 } from "@zen-stream/contracts";
 import { MediaApiError } from "./client";
+import { infoWithCachedReleaseDate, rememberSubject, rememberSubjects, summaryFromInfo, summaryFromSearchItem } from "./subjectCache";
 import {
   fetchHomeFeed,
   fetchHomeSubjects,
@@ -83,15 +84,19 @@ export function useAsyncData<T>(
 }
 
 export function useHomeFeed() {
-  return useAsyncData<MediaHomeFeed>((signal) => fetchHomeFeed(signal), []);
+  return useAsyncData<MediaHomeFeed>(async (signal) => {
+    const feed = await fetchHomeFeed(signal);
+    for (const row of feed.rows) rememberSubjects(row.subjects);
+    return feed;
+  }, []);
 }
 
 export function useHomeSubjects(opId: string | undefined) {
-  return useAsyncData<MediaHomeSubjects>(
-    (signal) => fetchHomeSubjects(opId ?? "", signal),
-    [opId],
-    opId !== undefined,
-  );
+  return useAsyncData<MediaHomeSubjects>(async (signal) => {
+    const response = await fetchHomeSubjects(opId ?? "", signal);
+    rememberSubjects(response.subjects);
+    return response;
+  }, [opId], opId !== undefined);
 }
 
 export interface UseSearchOptions {
@@ -101,19 +106,21 @@ export interface UseSearchOptions {
 
 export function useSearch({ keyword, page = 1 }: UseSearchOptions) {
   const hasKeyword = keyword.trim().length > 0;
-  return useAsyncData<MediaSearchResponse>(
-    (signal) => searchMedia({ keyword, page, perPage: 20 }, signal),
-    [keyword, page],
-    hasKeyword,
-  );
+  return useAsyncData<MediaSearchResponse>(async (signal) => {
+    const response = await searchMedia({ keyword, page, perPage: 20 }, signal);
+    rememberSubjects(response.items.map(summaryFromSearchItem));
+    return response;
+  }, [keyword, page], hasKeyword);
 }
 
 export function useMediaInfo(subjectId: string | undefined) {
-  return useAsyncData<MediaInfo>(
-    (signal) => fetchMediaInfo(subjectId ?? "", signal),
-    [subjectId],
-    subjectId !== undefined,
-  );
+  return useAsyncData<MediaInfo>(async (signal) => {
+    const info = await fetchMediaInfo(subjectId ?? "", signal);
+    // Keep the richest trusted metadata: the info payload may omit the
+    // release date a home/search hit already carried for this session.
+    rememberSubject(summaryFromInfo(infoWithCachedReleaseDate(info)));
+    return info;
+  }, [subjectId], subjectId !== undefined);
 }
 
 export function useSeason(subjectId: string | undefined) {
@@ -130,10 +137,13 @@ export interface UseStreamOptions {
   ep: number;
 }
 
-export function useStream({ subjectId, se, ep }: UseStreamOptions) {
+export function useStream(
+  { subjectId, se, ep }: UseStreamOptions,
+  enabled = true,
+) {
   return useAsyncData<MediaStreamResponse>(
     (signal) => fetchStream(subjectId ?? "", { se, ep }, signal),
     [subjectId, se, ep],
-    subjectId !== undefined,
+    enabled && subjectId !== undefined,
   );
 }
