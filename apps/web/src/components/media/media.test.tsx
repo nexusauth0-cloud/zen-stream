@@ -223,11 +223,13 @@ describe("DetailsHero availability actions", () => {
       runtime: 108,
       genre: "Crime",
       poster: null,
+      backdrop: null,
       country: null,
       rating: 7.4,
       hasResource: true,
       language: "English",
       staff: [],
+      externalIds: { moviebox: null, spun: null, daratech: null, imdb: null, tmdb: null },
       ...overrides,
     };
   }
