@@ -26,6 +26,7 @@ import type {
   MediaSeasonResponse,
   MediaStreamResponse,
 } from "@zen-stream/contracts";
+import type { ProviderStatus } from "@zen-stream/contracts";
 import type { MediaSearchUpstreamParams, MediaStreamUpstreamParams } from "../media/client.js";
 
 /** Catalog/metadata surface — everything except playback. */
@@ -38,6 +39,8 @@ export interface MediaProvider {
   fetchSearch(params: MediaSearchUpstreamParams): Promise<MediaSearchResponse>;
   fetchInfo(subjectId: string): Promise<MediaInfo>;
   fetchSeason(subjectId: string): Promise<MediaSeasonResponse>;
+  /** Optional lightweight health probe for debugging/observability. */
+  health?(): Promise<ProviderStatus>;
 }
 
 /** Playback surface — stream resolution for a subject. */
@@ -45,6 +48,8 @@ export interface PlaybackProvider {
   readonly id: string;
   readonly name: string;
   fetchStream(subjectId: string, params: MediaStreamUpstreamParams): Promise<MediaStreamResponse>;
+  /** Optional lightweight health probe for debugging/observability. */
+  health?(): Promise<ProviderStatus>;
 }
 
 /**
@@ -60,6 +65,8 @@ export interface SecondaryMetadataProvider {
   readonly name: string;
   fetchSearch(params: MediaSearchUpstreamParams): Promise<MediaSearchResponse>;
   fetchInfo(subjectId: string): Promise<MediaInfo>;
+  /** Optional lightweight health probe for debugging/observability. */
+  health?(): Promise<ProviderStatus>;
 }
 
 /** A provider that can serve both roles. */

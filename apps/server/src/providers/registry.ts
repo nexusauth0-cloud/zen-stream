@@ -72,6 +72,21 @@ export class ProviderRegistry {
     return this.defaultSecondaryId !== null ? (this.secondary.get(this.defaultSecondaryId) ?? null) : null;
   }
 
+  /** All secondary metadata providers in registration order (fallback order). */
+  getSecondaries(): SecondaryMetadataProvider[] {
+    return [...this.secondary.values()];
+  }
+
+  /** All metadata providers in registration order. */
+  getMetadataProviders(): MediaProvider[] {
+    return [...this.metadata.values()];
+  }
+
+  /** All playback providers in registration order. */
+  getPlaybackProviders(): PlaybackProvider[] {
+    return [...this.playback.values()];
+  }
+
   /** The default playback provider, or a named one. Null when unregistered. */
   getPlayback(id?: string): PlaybackProvider | null {
     if (id !== undefined) return this.playback.get(id) ?? null;

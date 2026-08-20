@@ -19,11 +19,13 @@ function metadataProvider(id: string): MediaProvider {
       runtime: null,
       genre: null,
       poster: null,
+      backdrop: null,
       country: null,
       rating: null,
       hasResource: false,
       language: null,
       staff: [],
+      externalIds: { moviebox: null, spun: null, daratech: null, imdb: null, tmdb: null },
     }),
     fetchSeason: async () => ({ seasons: [] }),
   };
@@ -51,11 +53,13 @@ function secondaryProvider(id: string): SecondaryMetadataProvider {
       runtime: null,
       genre: null,
       poster: null,
+      backdrop: null,
       country: null,
       rating: null,
       hasResource: false,
       language: null,
       staff: [],
+      externalIds: { moviebox: null, spun: null, daratech: null, imdb: null, tmdb: null },
     }),
   };
 }
@@ -144,5 +148,34 @@ describe("ProviderRegistry", () => {
     const registry = new ProviderRegistry();
     expect(registry.hasSecondary()).toBe(false);
     expect(registry.getSecondary()).toBeNull();
+  });
+
+  it("lists secondaries in registration order for fallback", () => {
+    const registry = new ProviderRegistry();
+    registry.registerSecondary(secondaryProvider("spun"));
+    registry.registerSecondary(secondaryProvider("daratech"));
+    registry.registerSecondary(secondaryProvider("tmdb"));
+
+    expect(registry.getSecondaries().map((provider) => provider.id)).toEqual([
+      "spun",
+      "daratech",
+      "tmdb",
+    ]);
+    expect(registry.getMetadataProviders().map((provider) => provider.id)).toEqual([]);
+  });
+
+  it("lists providers of each role without mixing roles", () => {
+    const registry = new ProviderRegistry();
+    const combined = { ...metadataProvider("moviebox"), ...playbackProvider("moviebox") };
+    registry.register(combined);
+    registry.registerMetadata(metadataProvider("other"));
+    registry.registerSecondary(secondaryProvider("spun"));
+
+    expect(registry.getMetadataProviders().map((provider) => provider.id)).toEqual([
+      "moviebox",
+      "other",
+    ]);
+    expect(registry.getPlaybackProviders().map((provider) => provider.id)).toEqual(["moviebox"]);
+    expect(registry.getSecondaries().map((provider) => provider.id)).toEqual(["spun"]);
   });
 });
