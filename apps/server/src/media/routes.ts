@@ -7,7 +7,7 @@ import { UpstreamHttpError } from "./client.js";
 import type { MediaUpstreamClient } from "./client.js";
 import { ProviderRegistry } from "../providers/registry.js";
 import { createClientProvider } from "../providers/client-provider.js";
-import type { MediaProvider, PlaybackProvider } from "../providers/types.js";
+import type { MediaProvider, PlaybackProvider, SecondaryMetadataProvider } from "../providers/types.js";
 
 function parseSubjectId(subjectId: string | undefined): string {
   const trimmed = subjectId?.trim() ?? "";
@@ -35,6 +35,37 @@ function translateUpstreamError(error: unknown): unknown {
     return new ApiError(502, "MEDIA_UPSTREAM_INVALID", "The media API returned an unexpected payload.");
   }
   return error;
+}
+
+/**
+ * Whether a failure is upstream-caused (transport, HTTP, or malformed
+ * payload) rather than a programming error — the only failures a secondary
+ * provider may legitimately fall back for.
+ */
+function isUpstreamFailure(error: unknown): boolean {
+  return error instanceof UpstreamHttpError || error instanceof ZodError;
+}
+
+/**
+ * Runs `run` against the primary provider and, when the primary fails with
+ * an upstream failure and a secondary metadata provider is registered,
+ * re-runs it against the secondary. Only the secondary's *success* replaces
+ * the primary outcome — any secondary failure rethrows the original primary
+ * failure so error semantics stay honest.
+ */
+function withFallback<T>(
+  run: (provider: MediaProvider | SecondaryMetadataProvider) => Promise<T>,
+  primary: MediaProvider,
+  secondary: SecondaryMetadataProvider | null,
+): Promise<T> {
+  return run(primary).catch((primaryError: unknown) => {
+    if (!isUpstreamFailure(primaryError) || !secondary) {
+      throw primaryError;
+    }
+    return run(secondary).catch(() => {
+      throw primaryError;
+    });
+  });
 }
 
 /**
@@ -129,14 +160,25 @@ export function createMediaRouter(
       if (!params.success) {
         throw new ApiError(400, "VALIDATION_ERROR", "A non-empty search query is required.");
       }
-      res.json(await media.fetchSearch(params.data));
+      const result = await withFallback(
+        (provider) => provider.fetchSearch(params.data),
+        media,
+        providers.getSecondary(),
+      );
+      res.json(result);
     }),
   );
 
   router.get(
     "/info/:subjectId",
     handle(async (media, req, res) => {
-      res.json(await media.fetchInfo(parseSubjectId(firstParam(req.params.subjectId))));
+      const subjectId = parseSubjectId(firstParam(req.params.subjectId));
+      const result = await withFallback(
+        (provider) => provider.fetchInfo(subjectId),
+        media,
+        providers.getSecondary(),
+      );
+      res.json(result);
     }),
   );
 

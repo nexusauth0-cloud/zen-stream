@@ -1,14 +1,21 @@
-import type { MediaProvider, PlaybackProvider } from "./types.js";
+import type { MediaProvider, PlaybackProvider, SecondaryMetadataProvider } from "./types.js";
 
 /**
  * Holds the configured media providers by id. The first registered provider
  * of each role is the default for that role; named lookups allow multiple
  * providers to coexist without the routes caring which one is active.
+ *
+ * Roles are independent:
+ *  - metadata:  primary catalog/discovery (e.g. MovieBox)
+ *  - secondary: metadata enrichment/fallback only (e.g. TMDB) — never playback
+ *  - playback:  stream resolution
  */
 export class ProviderRegistry {
   private readonly metadata = new Map<string, MediaProvider>();
+  private readonly secondary = new Map<string, SecondaryMetadataProvider>();
   private readonly playback = new Map<string, PlaybackProvider>();
   private defaultMetadataId: string | null = null;
+  private defaultSecondaryId: string | null = null;
   private defaultPlaybackId: string | null = null;
 
   registerMetadata(provider: MediaProvider): this {
@@ -27,6 +34,15 @@ export class ProviderRegistry {
     return this;
   }
 
+  /** Registers a secondary (metadata-only) provider. */
+  registerSecondary(provider: SecondaryMetadataProvider): this {
+    if (!this.secondary.has(provider.id)) {
+      this.defaultSecondaryId ??= provider.id;
+    }
+    this.secondary.set(provider.id, provider);
+    return this;
+  }
+
   /** Registers a combined provider for both roles. */
   register(provider: MediaProvider & PlaybackProvider): this {
     return this.registerMetadata(provider).registerPlayback(provider);
@@ -34,6 +50,10 @@ export class ProviderRegistry {
 
   hasMetadata(): boolean {
     return this.metadata.size > 0;
+  }
+
+  hasSecondary(): boolean {
+    return this.secondary.size > 0;
   }
 
   hasPlayback(): boolean {
@@ -44,6 +64,12 @@ export class ProviderRegistry {
   getMetadata(id?: string): MediaProvider | null {
     if (id !== undefined) return this.metadata.get(id) ?? null;
     return this.defaultMetadataId !== null ? (this.metadata.get(this.defaultMetadataId) ?? null) : null;
+  }
+
+  /** The default secondary metadata provider, or a named one. Null when unregistered. */
+  getSecondary(id?: string): SecondaryMetadataProvider | null {
+    if (id !== undefined) return this.secondary.get(id) ?? null;
+    return this.defaultSecondaryId !== null ? (this.secondary.get(this.defaultSecondaryId) ?? null) : null;
   }
 
   /** The default playback provider, or a named one. Null when unregistered. */

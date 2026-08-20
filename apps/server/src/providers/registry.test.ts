@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ProviderRegistry } from "./registry.js";
-import type { MediaProvider, PlaybackProvider } from "./types.js";
+import type { MediaProvider, PlaybackProvider, SecondaryMetadataProvider } from "./types.js";
 
 function metadataProvider(id: string): MediaProvider {
   return {
@@ -34,6 +34,29 @@ function playbackProvider(id: string): PlaybackProvider {
     id,
     name: id,
     fetchStream: async () => ({ streams: [], total: 0 }),
+  };
+}
+
+function secondaryProvider(id: string): SecondaryMetadataProvider {
+  return {
+    id,
+    name: id,
+    fetchSearch: async () => ({ items: [], pager: { hasMore: false, page: 1, perPage: 20, totalCount: 0 } }),
+    fetchInfo: async (subjectId: string) => ({
+      subjectId,
+      type: "movie",
+      title: id,
+      description: null,
+      releaseDate: null,
+      runtime: null,
+      genre: null,
+      poster: null,
+      country: null,
+      rating: null,
+      hasResource: false,
+      language: null,
+      staff: [],
+    }),
   };
 }
 
@@ -84,5 +107,42 @@ describe("ProviderRegistry", () => {
 
     expect(registry.getMetadata()?.id).toBe("first");
     expect(registry.getMetadata("second")?.id).toBe("second");
+  });
+
+  it("registers a secondary metadata provider independently of other roles", () => {
+    const registry = new ProviderRegistry();
+    registry.registerMetadata(metadataProvider("moviebox"));
+    registry.registerSecondary(secondaryProvider("tmdb"));
+
+    expect(registry.hasSecondary()).toBe(true);
+    expect(registry.getSecondary()?.id).toBe("tmdb");
+    expect(registry.getMetadata()?.id).toBe("moviebox");
+  });
+
+  it("keeps the primary metadata provider as default when a secondary is added", () => {
+    const registry = new ProviderRegistry();
+    registry.registerMetadata(metadataProvider("moviebox"));
+    registry.registerPlayback(playbackProvider("moviebox"));
+    registry.registerSecondary(secondaryProvider("tmdb"));
+
+    expect(registry.getMetadata()?.id).toBe("moviebox");
+    expect(registry.getPlayback()?.id).toBe("moviebox");
+    expect(registry.getSecondary()?.id).toBe("tmdb");
+  });
+
+  it("treats the first registered secondary as the default and allows named lookups", () => {
+    const registry = new ProviderRegistry();
+    registry.registerSecondary(secondaryProvider("tmdb"));
+    registry.registerSecondary(secondaryProvider("other"));
+
+    expect(registry.getSecondary()?.id).toBe("tmdb");
+    expect(registry.getSecondary("other")?.id).toBe("other");
+    expect(registry.getSecondary("missing")).toBeNull();
+  });
+
+  it("reports no secondary when none is registered", () => {
+    const registry = new ProviderRegistry();
+    expect(registry.hasSecondary()).toBe(false);
+    expect(registry.getSecondary()).toBeNull();
   });
 });

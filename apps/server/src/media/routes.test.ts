@@ -12,6 +12,10 @@ import type {
 } from "@zen-stream/contracts";
 import { UpstreamHttpError } from "./client.js";
 import { createApp } from "../app.js";
+import { ProviderRegistry } from "../providers/registry.js";
+import { createTmdBProvider } from "../providers/tmdb/provider.js";
+import { resetTmdBGenreCache } from "../providers/tmdb/client.js";
+import type { MediaProvider } from "../providers/types.js";
 
 function fakeClient(overrides: Partial<MediaUpstreamClient> = {}): MediaUpstreamClient {
   return {
@@ -132,6 +136,77 @@ function fakeClient(overrides: Partial<MediaUpstreamClient> = {}): MediaUpstream
 }
 
 const UPSTREAM_SECRET = "super-secret-value";
+
+function failingPrimary(overrides: Partial<MediaProvider> = {}): MediaProvider {
+  return {
+    id: "moviebox",
+    name: "MovieBox",
+    fetchHome: async () => ({ total: 0, rows: [] }),
+    fetchHomeRows: async () => ({ total: 0, rows: [] }),
+    fetchHomeSubjects: async (opId: string) => ({ opId, title: "Row", total: 0, subjects: [] }),
+    fetchSearch: async () => {
+      throw new UpstreamHttpError(502, "Upstream media search is temporarily unavailable");
+    },
+    fetchInfo: async () => {
+      throw new UpstreamHttpError(404, "Not found");
+    },
+    fetchSeason: async () => ({ seasons: [] }),
+    ...overrides,
+  };
+}
+
+function tmdbFetch(fixtures: Record<string, unknown>) {
+  return vi.fn(async (url: string) => {
+    for (const [suffix, body] of Object.entries(fixtures)) {
+      if (url.includes(suffix)) return new Response(JSON.stringify(body), { status: 200 });
+    }
+    throw new Error(`unexpected tmdb url ${url}`);
+  });
+}
+
+const TMDB_SEARCH_FIXTURES = {
+  "/search/multi": {
+    page: 1,
+    total_pages: 1,
+    total_results: 1,
+    results: [
+      {
+        id: 27205,
+        media_type: "movie",
+        title: "Inception",
+        release_date: "2010-07-15",
+        poster_path: "/x.jpg",
+        vote_average: 8.4,
+        genre_ids: [28],
+        original_language: "en",
+      },
+    ],
+  },
+  "/genre/movie/list": { genres: [{ id: 28, name: "Action" }] },
+  "/genre/tv/list": { genres: [] },
+};
+
+const TMDB_INFO_FIXTURES = {
+  "/movie/27205?": {
+    id: 27205,
+    title: "Inception",
+    overview: "A thief who steals corporate secrets.",
+    release_date: "2010-07-15",
+    poster_path: "/inception.jpg",
+    vote_average: 8.4,
+    runtime: 148,
+    genres: [{ id: 28, name: "Action" }],
+    production_countries: [{ iso_3166_1: "US" }],
+    external_ids: { imdb_id: "tt1375666" },
+  },
+};
+
+function registryWithTmdb(primary: MediaProvider, fetchImpl: ReturnType<typeof tmdbFetch>): ProviderRegistry {
+  const registry = new ProviderRegistry();
+  registry.registerMetadata(primary);
+  registry.registerSecondary(createTmdBProvider({ apiKey: "tmdb-test-key" }, fetchImpl));
+  return registry;
+}
 
 describe("GET /api/v1/media/home", () => {
   it("returns the normalized home feed", async () => {
@@ -333,5 +408,115 @@ describe("upstream failures", () => {
 
     expect(JSON.stringify(response.body)).not.toContain(UPSTREAM_SECRET);
     expect(JSON.stringify(response.body)).not.toContain("secret leaked?");
+  });
+});
+
+describe("secondary metadata fallback (TMDB)", () => {
+  afterEach(() => {
+    resetTmdBGenreCache();
+  });
+
+  it("falls back to TMDB search when the primary search fails", async () => {
+    const fetchImpl = tmdbFetch(TMDB_SEARCH_FIXTURES);
+    const app = createApp({
+      providers: registryWithTmdb(failingPrimary(), fetchImpl),
+    });
+
+    const response = await request(app).get("/api/v1/media/search?q=inception");
+
+    expect(response.status).toBe(200);
+    expect(response.body.items[0]).toMatchObject({
+      subjectId: "movie:27205",
+      type: "movie",
+      title: "Inception",
+      genre: "Action",
+    });
+  });
+
+  it("does NOT consult TMDB when the primary search succeeds, even with zero results", async () => {
+    const fetchImpl = tmdbFetch(TMDB_SEARCH_FIXTURES);
+    const app = createApp({
+      providers: registryWithTmdb(
+        failingPrimary({
+          fetchSearch: async () => ({
+            items: [],
+            pager: { hasMore: false, page: 1, perPage: 20, totalCount: 0 },
+          }),
+        }),
+        fetchImpl,
+      ),
+    });
+
+    const response = await request(app).get("/api/v1/media/search?q=zzzz");
+
+    expect(response.status).toBe(200);
+    expect(response.body.items).toEqual([]);
+    // The TMDB mock throws on any unexpected call — a fallback would 502.
+  });
+
+  it("surfaces the primary search failure when no secondary is registered", async () => {
+    const registry = new ProviderRegistry();
+    registry.registerMetadata(failingPrimary());
+    const app = createApp({ providers: registry });
+
+    const response = await request(app).get("/api/v1/media/search?q=inception");
+
+    expect(response.status).toBe(502);
+    expect(response.body.error.code).toBe("MEDIA_UPSTREAM_ERROR");
+  });
+
+  it("surfaces the primary search failure when TMDB also fails", async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new TypeError("fetch failed");
+    });
+    const app = createApp({
+      providers: registryWithTmdb(failingPrimary(), fetchImpl),
+    });
+
+    const response = await request(app).get("/api/v1/media/search?q=inception");
+
+    expect(response.status).toBe(502);
+    expect(response.body.error.code).toBe("MEDIA_UPSTREAM_ERROR");
+  });
+
+  it("falls back to TMDB details when the primary info fails", async () => {
+    const fetchImpl = tmdbFetch(TMDB_INFO_FIXTURES);
+    const app = createApp({
+      providers: registryWithTmdb(failingPrimary(), fetchImpl),
+    });
+
+    const response = await request(app).get("/api/v1/media/info/movie:27205");
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      subjectId: "movie:27205",
+      type: "movie",
+      title: "Inception",
+      hasResource: false,
+    });
+  });
+
+  it("never lets TMDB details claim playability", async () => {
+    const fetchImpl = tmdbFetch(TMDB_INFO_FIXTURES);
+    const app = createApp({
+      providers: registryWithTmdb(failingPrimary(), fetchImpl),
+    });
+
+    const response = await request(app).get("/api/v1/media/info/movie:27205");
+
+    expect(response.status).toBe(200);
+    expect(response.body.hasResource).toBe(false);
+  });
+
+  it("surfaces the primary info failure when TMDB cannot answer (foreign id)", async () => {
+    const fetchImpl = tmdbFetch({});
+    const app = createApp({
+      providers: registryWithTmdb(failingPrimary(), fetchImpl),
+    });
+
+    const response = await request(app).get("/api/v1/media/info/6021098917113354936");
+
+    expect(response.status).toBe(502);
+    expect(response.body.error.code).toBe("MEDIA_UPSTREAM_ERROR");
   });
 });
