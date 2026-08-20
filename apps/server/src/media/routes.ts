@@ -158,6 +158,7 @@ const ENRICHMENT_TTL_MS = 10 * 60 * 1000;
  *  - everything fails → the original primary failure surfaces
  */
 async function infoWithFallback(
+  subjectId: string,
   run: (provider: MediaProvider | SecondaryMetadataProvider) => Promise<MediaInfo>,
   primary: MediaProvider,
   secondaries: SecondaryMetadataProvider[],
@@ -168,12 +169,12 @@ async function infoWithFallback(
     if (!needsEnrichment(info) || secondaries.length === 0) {
       return info;
     }
-    const cached = cache.get(info.subjectId);
+    const cached = cache.get(subjectId);
     if (cached) return cached;
     for (const secondary of secondaries) {
       try {
         const enriched = enrichInfo(info, await run(secondary));
-        cache.set(info.subjectId, enriched);
+        cache.set(subjectId, enriched);
         return enriched;
       } catch {
         // Try the next secondary; never let enrichment break the primary.
@@ -184,9 +185,15 @@ async function infoWithFallback(
     if (!isUpstreamFailure(primaryError) || secondaries.length === 0) {
       throw primaryError;
     }
+    // The primary is down: a previously recovered answer is served from
+    // cache instead of re-hitting every secondary provider per details view.
+    const cached = cache.get(subjectId);
+    if (cached) return cached;
     for (const secondary of secondaries) {
       try {
-        return await run(secondary);
+        const secondaryInfo = await run(secondary);
+        cache.set(subjectId, secondaryInfo);
+        return secondaryInfo;
       } catch {
         // Try the next secondary.
       }
@@ -311,6 +318,7 @@ export function createMediaRouter(
     handle(async (media, req, res) => {
       const subjectId = parseSubjectId(firstParam(req.params.subjectId));
       const result = await infoWithFallback(
+        subjectId,
         (provider) => provider.fetchInfo(subjectId),
         media,
         providers.getSecondaries(),

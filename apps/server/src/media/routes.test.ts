@@ -776,6 +776,26 @@ describe("multi-provider info fallback", () => {
     expect(response.body.externalIds.daratech).toBe("NjAyNjQxMjIzMjk2NjM4OTkwNDo6OnBpY2E");
   });
 
+  it("caches the recovered answer so repeat views do not re-hit secondaries when the primary is down", async () => {
+    const spunFetch = secondaryFetch({
+      "/utility/resolve/moviebox?id=6026412232966389904": SPUN_RESOLVE_FIXTURE,
+      "/info/spider-man-brand-new-day-824972": SPUN_INFO_FIXTURE,
+    });
+    const app = createApp({
+      providers: registryWithSecondaries(failingPrimary(), spunFetch, secondaryFetch({})),
+    });
+
+    await request(app).get("/api/v1/media/info/6026412232966389904");
+    await request(app).get("/api/v1/media/info/6026412232966389904");
+    await request(app).get("/api/v1/media/info/6026412232966389904");
+
+    // The resolve+info round trip happens once; repeat views hit the cache.
+    const spunInfoCalls = spunFetch.mock.calls.filter(([url]) =>
+      String(url).includes("/info/spider-man-brand-new-day-824972"),
+    );
+    expect(spunInfoCalls).toHaveLength(1);
+  });
+
   it("surfaces the primary info failure when all secondaries fail", async () => {
     const app = createApp({
       providers: registryWithSecondaries(
