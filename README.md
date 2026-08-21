@@ -113,8 +113,25 @@ user supplies their own credentials via `MEDIA_API_BASE_URL` / `MEDIA_API_SECRET
 
 - M1: greenfield foundation — workspace, web, server, contracts, design
   tokens, base CSS, minimal primitives, health endpoint.
-- M2 (current): streaming product — contracts for the media API, server
-  proxy with env config and tests, typed web client and data hooks,
-  watchlist store, and a MovieBox-style UI: streaming shell, API-driven
-  home feed, movie/series browse, search with URL sync, details with
-  seasons and episodes, honest player states, collections, and My List.
+- M2: streaming product — contracts for the media API, server proxy with
+  env config and tests, typed web client and data hooks, watchlist store,
+  and a MovieBox-style UI: streaming shell, API-driven home feed,
+  movie/series browse, search with URL sync, details with seasons and
+  episodes, honest player states, collections, and My List.
+- Catalog parity and density: Animation and Most Watched catalogs,
+  densified browsing, global shell widened to 1920px with compact media
+  cards and dense responsive rails, empty rail/section suppression.
+- Discovery experience: rotating featured hero carousel over real titles
+  (stable overlay geometry, auto-rotation, pause on hover/focus),
+  distributed promotional placements, case-insensitive search
+  normalization, centered three-region desktop navigation, availability
+  model with availability-aware actions, Coming Soon rail/page/route,
+  and Share actions with clipboard fallback.
+- Provider resilience: provider abstraction with a MovieBox adapter,
+  transport-level upstream failures mapped to retryable 502s, TMDB /
+  Spün / DaraTech registered as metadata-only secondary providers,
+  cross-provider identity resolution, search/details fallback,
+  `GET /api/v1/providers/health`, honest zero-results vs
+  provider-failure semantics, Coming Soon UX that survives missing
+  provider data, and a production packaging fix so `npm start` serves
+  the built API.
